@@ -14,8 +14,9 @@ namespace ProgramPrognos
 {
     public partial class Form1 : Form
     {
-        public static string homefolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        public static string folder = homefolder + @"\Invärld\Långtidsbudget 2021";
+        //public static string homefolder = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        public static string homefolder = Environment.GetEnvironmentVariable("onedrive")+@"\Dokument";
+        public static string folder = homefolder + @"\Invärld\Långtidsbudget";
         public static string docfolder = homefolder;//@"\\dustaff\home\"+Environment.UserName+@"\Documents";
         public static string utaninst = "Utan institution";
 
@@ -39,13 +40,15 @@ namespace ProgramPrognos
         {
             InitializeComponent();
             string machine = Environment.MachineName;
-            var df = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+            var df = homefolder;//Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
             memo("Machine name = " + Environment.MachineName);
 
             datafolderlabel.Text = "Data folder: " + folder;
             docfolderlabel.Text = "Document folder " + docfolder;
 
             string fn = folder + @"\programkopplingar.txt";
+            string[] ss = Directory.GetDirectories(homefolder);
+            Directory.GetFiles(folder);
 
             using (StreamReader sr = new StreamReader(fn))
             {
