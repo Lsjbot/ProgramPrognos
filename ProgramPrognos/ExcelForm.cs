@@ -116,13 +116,21 @@ namespace ProgramPrognos
         }
 
         Dictionary<string, int> prow;
+        Dictionary<string, int> crow;
         Dictionary<string, int> planhd;
         Dictionary<string, int> plan2hd;
         Dictionary<string, int> bathd;
         Dictionary<string, int> rethd;
+        Dictionary<string, int> coursehd;
         int retoffset = 2;
+        int courseoffset = 2;
         string acceptstring = "Antas ";
         string t1string = "T1 ";
+        string studstring = "Stud ";
+        string fkstudstring = "FK-stud ";
+        string fkstring = "FK ";
+        string progstudstring = "Prog-stud ";
+        string progstring = "prog ";
         string hststring = "HST ";
         string hprstring = "HPR ";
         string moneystring = "Kr ";
@@ -130,9 +138,12 @@ namespace ProgramPrognos
         string mainsheetname = "Planering";
         string detailsheetname = "Detaljer";
         string batsheetname = "Programkullar";
+        string coursesheetname = "Kurser";
+        string paysheetname = "Betalande stud";
         string applstring = "1:ahandssökande";
         string accstring = "Antagna";
         string studhststring = "Stud/HST?";
+        string prestationstring = "Prest-grad";
 
         private void fill_planhd(Excel.Worksheet sheet, Excel.Worksheet sheet2, List<programclass> qprog, string startsem, string endsem)
         {
@@ -295,6 +306,7 @@ namespace ProgramPrognos
                 Excel.Range qa = sheet.Columns[i];
                 qa.ColumnWidth = 15;
                 //qa.Interior.Color = Excel.XlRgbColor.rgbPink;
+                //qa.FormatConditions.Add(Excel.XlFormatConditionType.xlCellValue, Excel.XlFormatConditionOperator.xlLess, 10);
             }
 
 
@@ -418,6 +430,477 @@ namespace ProgramPrognos
             //sheet.Protect();
         }
 
+        private void CourseSheet(Excel.Worksheet coursesheet, List<programclass> qprog, List<programclass> qcourse, string startsem, string endsem)
+        {
+            int hpcol = 2;
+            int codecol = 3;
+            int prestcol = 4;
+            int moneycol = 5;
+            int totalrow = 2;
+
+            int newcourses = 20;
+            string newcoursename = "Ny kurs ";
+
+            coursehd = new Dictionary<string, int>() { 
+                { "Kurs", 0 }, 
+                { "Hp", hpcol-1 },
+                { "Kurskod", codecol-1 }, 
+                { prestationstring, prestcol-1 }, 
+                { "Kr/HST", moneycol-1 } };
+
+            List<string> semlist = new List<string>();
+            int col = coursehd.Count + 1;
+
+            int startyear = 2000 + util.semtoint(startsem);
+            int endyear = 2000 + util.semtoint(endsem);
+
+            for (int i = startyear; i <= endyear; i++)
+            {
+                coursehd.Add(moneystring + fkstring + i, col);
+                col++;
+            }
+
+            for (int i = startyear; i <= endyear; i++)
+            {
+                coursehd.Add(moneystring + progstring + i, col);
+                col++;
+            }
+
+
+            string sem = startsem;
+
+            do
+            {
+                coursehd.Add(studstring + sem, col);
+                semlist.Add(sem);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(fkstudstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(progstudstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(acceptstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(hststring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(hprstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(hststring + fkstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(hprstring + fkstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(hststring + progstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+            sem = startsem;
+
+            do
+            {
+                coursehd.Add(hprstring + progstring + sem, col);
+                col++;
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+            for (int i = startyear; i <= endyear; i++)
+            {
+                coursehd.Add(hststring + i, col);
+                col++;
+                coursehd.Add(hprstring + i, col);
+                col++;
+            }
+
+            //for (int i = 1; i < allmaxsem; i++)
+            //{
+            //    rethd.Add("T" + i + "->T" + (i + 1), 2 + i);
+            //}
+
+            Dictionary<string, List<string>> progrefdict = new Dictionary<string, List<string>>();
+            foreach (programclass pc in qprog)
+            {
+                foreach (int i in pc.coursedict.Keys)
+                {
+                    foreach (string cc in pc.coursedict[i].Keys)
+                    {
+                        if (!progrefdict.ContainsKey(cc))
+                        {
+                            progrefdict.Add(cc, new List<string>());
+                        }
+                        if (!progrefdict[cc].Contains(pc.name))
+                            progrefdict[cc].Add(pc.name);
+                    }
+                }
+            }
+
+            for (int i=0;i<newcourses;i++)
+            {
+                programclass nc = new programclass(newcoursename + i + "(fyll i hp och FK-stud)");
+                qcourse.Add(nc);
+            }
+
+            SheetWithHeader(coursesheet, qcourse.Count + courseoffset, coursehd);
+            crow = ProgramNames(coursesheet, qcourse, courseoffset);
+            coursesheet.Cells[totalrow, 1] = "Total";
+            coursesheet.Rows[totalrow].Font.Bold = true;
+
+            double prestsum = 0;
+            double krhstsum = 0;
+            double ncourses = 0;
+
+
+            foreach (programclass pc in qcourse)
+            {
+                bool nykurs = pc.name.StartsWith(newcoursename);
+                int nrow = crow[pc.name];
+                if (!nykurs)
+                    coursesheet.Cells[nrow, hpcol].Value = pc.hp;
+                coursesheet.Cells[nrow, codecol].Value = pc.bestcode();
+                double prest = 0.8;
+                if (pc.totalprod.frachst > 0)
+                {
+                    prest = pc.totalprod.frachpr / pc.totalprod.frachst;
+                    if (prest > 1)
+                        prest = 1;
+                }
+                else if (nykurs)
+                {
+                    prest = prestsum / ncourses;
+                }
+                prestsum += prest;
+                coursesheet.Cells[nrow, prestcol].Value = prest;
+                double krhst;
+                if (nykurs)
+                    krhst = krhstsum / ncourses;
+                else
+                    krhst = Form1.hstkr(1, pc.studentpengarea) + prest * Form1.hprkr(1, pc.studentpengarea);
+                coursesheet.Cells[nrow, moneycol].Value = krhst;
+                krhstsum += krhst;
+                ncourses++;
+
+                //FK-studenter:
+                double lastvt = 0;
+                double lastht = 0;
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[fkstudstring + sm] + 1;
+                    programbatchclass bc = pc.getbatch(sm);
+                    if (bc != null)
+                    {
+                        double stud = (double)bc.getactualstud(1);
+                        coursesheet.Cells[nrow, ncol].Value = stud;
+                        if (sm.StartsWith("V"))
+                            lastvt = stud;
+                        else
+                            lastht = stud;
+                    }
+                    else
+                    {
+                        double stud;
+                        if (sm.StartsWith("V"))
+                            stud = lastvt;
+                        else
+                            stud = lastht;
+                        if (stud > 0)
+                            coursesheet.Cells[nrow, ncol].Value = stud;
+                    }
+
+                }
+
+                //programstudenter:
+                if (progrefdict.ContainsKey(pc.bestcode()))
+                {
+                    foreach (string sm in semlist)
+                    {
+                        int ncol = coursehd[progstudstring + sm] + 1;
+                        string sumref = "";
+                        foreach (string prog in progrefdict[pc.bestcode()])
+                        {
+                            programclass prc = Form1.origprogramdict[prog];
+                            foreach (int isem in prc.coursedict.Keys)
+                            {
+                                if (prc.coursedict[isem].ContainsKey(pc.bestcode()))
+                                {
+                                    if (prc.coursedict[isem][pc.bestcode()] > 0)
+                                    {
+                                        string batstart = util.find_batstart(sm, isem);
+                                        if (batsemref[prog].ContainsKey(batstart)
+                                            && batsemref[prog][batstart].ContainsKey(isem))
+                                        {
+                                            if (String.IsNullOrEmpty(sumref))
+                                                sumref = toreplace + "=";
+                                            else
+                                                sumref += "+";
+                                            sumref += batsemref[prog][batstart][isem];
+                                            sumref += "*" + prc.coursedict[isem][pc.bestcode()];
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        coursesheet.Cells[nrow, ncol].Value = sumref;
+                    }
+                }
+
+                //summa studenter
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[studstring + sm] + 1;
+                    int ncolf = coursehd[fkstudstring + sm] + 1;
+                    int ncolp = coursehd[progstudstring + sm] + 1;
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace + "=IF("
+                        + Cellname(nrow, ncolf) + "+" + Cellname(nrow, ncolp) + "=0;\"\";"
+                        + Cellname(nrow, ncolf) + "+" + Cellname(nrow, ncolp) + ")";
+                }
+
+                //HST FK
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[hststring+fkstring + sm] + 1;
+                    int ncolf = coursehd[fkstudstring + sm] + 1;
+                    
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace+"=" + Cellname(nrow, ncolf)
+                        + "*" + Cellname(nrow, hpcol)+"/60";
+                }
+
+                //HST Prog
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[hststring + progstring + sm] + 1;
+                    int ncolf = coursehd[progstudstring + sm] + 1;
+
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace + "=" + Cellname(nrow, ncolf)
+                        + "*" + Cellname(nrow, hpcol) + "/60";
+                }
+
+                //summa HST
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[hststring + sm] + 1;
+                    int ncolf = coursehd[hststring+fkstring + sm] + 1;
+                    int ncolp = coursehd[hststring+progstring + sm] + 1;
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace+"=" + Cellname(nrow, ncolf) + "+" + Cellname(nrow, ncolp);
+                }
+
+
+                //HPR FK
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[hprstring + fkstring + sm] + 1;
+                    int ncolf = coursehd[hststring+fkstring + sm] + 1;
+
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace + "=" + Cellname(nrow, ncolf)
+                        + "*" + Cellname(nrow, prestcol);
+                }
+
+                //HPR prog
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[hprstring + progstring + sm] + 1;
+                    int ncolf = coursehd[hststring + progstring + sm] + 1;
+
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace + "=" + Cellname(nrow, ncolf)
+                        + "*" + Cellname(nrow, prestcol);
+                }
+
+                //summa HPR
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[hprstring + sm] + 1;
+                    int ncolf = coursehd[hprstring + fkstring + sm] + 1;
+                    int ncolp = coursehd[hprstring + progstring + sm] + 1;
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace + "=" + Cellname(nrow, ncolf) + "+" + Cellname(nrow, ncolp);
+                }
+
+                //Pengar FK
+                for (int i = startyear; i <= endyear; i++)
+                {
+                    int ncol = coursehd[moneystring + fkstring + i]+1;
+                    string vtsem = "VT" + (i % 100);
+                    string htsem = "HT" + (i % 100);
+                    int hstvtcol = coursehd[hststring + fkstring + vtsem] + 1;
+                    int hsthtcol = coursehd[hststring + fkstring + htsem] + 1;
+                    int hprvtcol = coursehd[hprstring + fkstring + vtsem] + 1;
+                    int hprhtcol = coursehd[hprstring + fkstring + htsem] + 1;
+                    string f = toreplace + "=";
+                    if (nykurs)
+                    {
+                        f += Cellname(nrow, moneycol) + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")";
+                    }
+                    else
+                    {
+                        f += Form1.hstkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")+";
+                        f += Form1.hprkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hprvtcol) + "+" + Cellname(nrow, hprhtcol) + ")";
+                    }
+                    coursesheet.Cells[nrow, ncol].Formula = f;
+
+                    col++;
+                }
+
+                //Pengar prog
+                for (int i = startyear; i <= endyear; i++)
+                {
+                    int ncol = coursehd[moneystring + progstring + i] + 1;
+                    string vtsem = "VT" + (i % 100);
+                    string htsem = "HT" + (i % 100);
+                    int hstvtcol = coursehd[hststring + progstring + vtsem] + 1;
+                    int hsthtcol = coursehd[hststring + progstring + htsem] + 1;
+                    int hprvtcol = coursehd[hprstring + progstring + vtsem] + 1;
+                    int hprhtcol = coursehd[hprstring + progstring + htsem] + 1;
+                    string f = toreplace + "=";
+                    f += Form1.hstkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")+";
+                    f += Form1.hprkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hprvtcol) + "+" + Cellname(nrow, hprhtcol) + ")";
+                    coursesheet.Cells[nrow, ncol].Formula = f;
+
+                    col++;
+                }
+
+                //Antas
+                foreach (string sm in semlist)
+                {
+                    int ncol = coursehd[acceptstring + sm] + 1;
+                    int ncolf = coursehd[fkstudstring + sm] + 1;
+                    double transition = 0.666;
+                    if (pc.transition[0] != null && pc.transition[0].transitionprob > 0)
+                        transition = pc.transition[0].transitionprob;
+                    coursesheet.Cells[nrow, ncol].Formula = toreplace + "=IF(" + Cellname(nrow, ncolf) + ">0;" + Cellname(nrow, ncolf)+"/"+transition+";\"\")";
+                }
+
+            }
+            //sdfa
+
+            for (int icol=6;icol<=coursehd.Count;icol++)
+            {
+                coursesheet.Cells[totalrow,icol].Formula = toreplace+"=SUM("+Cellname(totalrow+1,icol)+":"+Cellname(qcourse.Count+courseoffset,icol)+")";
+            }
+
+            coursesheet.Range["D3", Cellname(999, 4)].NumberFormat = "###.0%";
+            coursesheet.Range["g3", "p999"].NumberFormat = "# ### ###";
+            coursesheet.Range["g3", "p999"].ColumnWidth = 13;
+            //coursesheet.Range["f3", "O999"].Interior.Color = Color.Pink;
+            ////coursesheet.Range["z3", "ai999"].NumberFormat = "# ###.#";
+            //coursesheet.Range["z3", "ai999"].Interior.Color = Color.Yellow;
+            coursesheet.Range["aj3", "dt999"].NumberFormat = "# ###.#";
+            //coursesheet.Range["aj3", "as999"].Interior.Color = Color.Tan;
+            foreach (string s in coursehd.Keys)
+            {
+                int ncol = coursehd[s] + 1;
+                Color color = Color.White;
+                if (s.Contains(moneystring + fkstring))
+                    color = Color.Pink;
+                else if (s.Contains(moneystring + progstring))
+                    color = Color.LightPink;
+                else if (s.Contains(fkstudstring))
+                    color = Color.Yellow;
+                else if (s.Contains(progstudstring))
+                    color = Color.Tan;
+                else if (s.Contains(acceptstring))
+                    color = Color.LightGreen;
+                else if (s.Contains(hststring))
+                    color = Color.LightBlue;
+                else if (s.Contains(hprstring))
+                    color = Color.PaleTurquoise;
+                else if (s.Contains(studstring))
+                    color = Color.AntiqueWhite;
+                coursesheet.Range[Cellname(3, ncol), Cellname(999, ncol)].Interior.Color = color;
+
+                var qa = coursesheet.Range[Cellname(3, ncol), Cellname(999, ncol)];
+                if (color == Color.Yellow)
+                    qa.Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+                if(color == Color.AntiqueWhite)
+                {
+                    Excel.FormatCondition cond = qa.FormatConditions.Add(Excel.XlFormatConditionType.xlCellValue, Excel.XlFormatConditionOperator.xlBetween,0.01, 9.99);
+                    cond.Font.Color = Color.Red;
+                    qa.NumberFormat = "###";
+                }
+            }
+
+        }
+
+        // batsemref[prog][batstart][sem] = Cellref.
+        Dictionary<string, Dictionary<string, Dictionary<int, string>>> batsemref = new Dictionary<string, Dictionary<string, Dictionary<int, string>>>();
+
+        private void add_batsemref(int nrow,int ncol,string prog, string bat, int sem,string shname)
+        {
+            string cname = "'" + shname + "'!"+Cellname(nrow, ncol);
+            if (!batsemref.ContainsKey(prog))
+                batsemref.Add(prog, new Dictionary<string, Dictionary<int, string>>());
+            if (!batsemref[prog].ContainsKey(bat))
+                batsemref[prog].Add(bat, new Dictionary<int, string>());
+            if (!batsemref[prog][bat].ContainsKey(sem))
+                batsemref[prog][bat].Add(sem, cname);
+        }
+
+
         private void BatchSheet(Excel.Worksheet sheet, List<programclass> qprog, string startsem, string endsem)
         {
             bathd = new Dictionary<string, int>() { { "Program", 0 }, { "Start", 1 }, { applstring, 2 },{ accstring, 3 } };
@@ -491,6 +974,10 @@ namespace ProgramPrognos
                     foreach (string ss in progbatsem[prog][bat].Keys)
                     {
                         sheet.Cells[nrow, bathd[ss]+1] = progbatsem[prog][bat][ss];
+                        // batsemref[prog][batstart][sem] = Cellref.
+                        int isem = util.semestercount(bat, ss);
+                        add_batsemref(nrow, bathd[ss] + 1, prog,bat, isem,batsheetname);
+
                     }
                     if (progbatsem[prog][bat].ContainsKey(lastsemwithdata))
                     {
@@ -501,6 +988,8 @@ namespace ProgramPrognos
                         {
                             int retcol = retoffset + nsem;
                             sheet.Cells[nrow, bathd[semx] + 1].Formula = "=" + Cellname(nrow, bathd[semx])+ "*'" + retsheetname + "'!" + Cellname(prow[prog], retcol);
+                            int isem = util.semestercount(bat, semx);
+                            add_batsemref(nrow, bathd[semx] + 1, prog, bat, isem,batsheetname);
                             semx = util.incrementsemester(semx);
                             nsem++;
 
@@ -522,6 +1011,7 @@ namespace ProgramPrognos
                     sheet.Cells[nrow, bathd["Program"] + 1] = prog;
                     sheet.Cells[nrow, bathd["Start"] + 1] = semnewbatch;
                     sheet.Cells[nrow, bathd[semnewbatch] + 1].Formula = "='" + mainsheetname + "'!" + Cellname(prow[prog], planhd[t1string + semnewbatch] + 1);
+                    add_batsemref(nrow, bathd[semnewbatch] + 1, prog, semnewbatch, 1, batsheetname);
                     int nsem = 2;
                     string semx = util.incrementsemester(semnewbatch);
                     if (semnewbatch != endsem)
@@ -530,6 +1020,8 @@ namespace ProgramPrognos
                         {
                             int retcol = retoffset + nsem;
                             sheet.Cells[nrow, bathd[semx] + 1].Formula = "=" + Cellname(nrow, bathd[semx]) + "*'" + retsheetname + "'!" + Cellname(prow[prog], retcol);
+                            int isem = util.semestercount(semnewbatch, semx);
+                            add_batsemref(nrow, bathd[semx] + 1, prog, semnewbatch, isem,batsheetname);
                             semx = util.incrementsemester(semx);
                             nsem++;
 
@@ -566,7 +1058,8 @@ namespace ProgramPrognos
             //Create COM Objects. Create a COM object for everything that is referenced
             Excel.Application xlApp = new Excel.Application();
 
-            string folder = util.timestampfolder(@"D:\Temp\", "Excel planning sheets per institution");
+            string folder = util.timestampfolder(@"C:\Temp\Excel planning sheets per institution");
+            //string folder = util.timestampfolder(Form1.folder + @"\Excel planning sheets per institution");
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
@@ -577,7 +1070,7 @@ namespace ProgramPrognos
 
             foreach (string inst in Form1.institutiondict.Keys)
             {
-                fninst.Add(inst, util.unusedfn(folder + "HST-planering " + inst + ".xlsx"));
+                fninst.Add(inst, util.unusedfn(folder + "HST-planering " + Form1.instshortdict[inst] +" "+util.yymmdd()+ ".xlsx"));
                 Excel.Workbook xl = xlApp.Workbooks.Add();
                 xldict.Add(inst, xl);
                 sheetdictdict.Add(inst, new Dictionary<string, Excel.Worksheet>());
@@ -597,10 +1090,19 @@ namespace ProgramPrognos
 
                 List<programclass> qprog;
                 if (RB_homeinst.Checked)
-                    qprog = (from c in Form1.origprogramdict where c.Value.homeinst == inst select c.Value).ToList();
+                    qprog = (from c in Form1.origprogramdict
+                             where c.Value.utype != "Kurspaket"
+                             where c.Value.homeinst == inst select c.Value).ToList();
                 else
-                    qprog = (from c in Form1.origprogramdict where c.Value.fracproddict.ContainsKey(inst) select c.Value).ToList();
-                
+                    qprog = (from c in Form1.origprogramdict
+                             where c.Value.utype != "Kurspaket"
+                             where c.Value.fracproddict.ContainsKey(inst) select c.Value).ToList();
+
+                var qpaket = (from c in Form1.origprogramdict
+                         where c.Value.utype == "Kurspaket"
+                         where c.Value.homeinst == inst
+                         select c.Value).ToList();
+
                 int nprog = qprog.Count;
                 int allmaxsem = (from c in qprog select c.semesters).Max();
 
@@ -646,6 +1148,13 @@ namespace ProgramPrognos
                 //    }
                 //AddExcelTabDiva(xldict[auinst], sheetdictdict[auinst], auinstpubdict, auinst, sheetnames, maxcount, auinst);
 
+                List<programclass> qcourse;
+                qcourse = (from c in Form1.fkdict 
+                           where c.Value.activecourse 
+                           where c.Value.homeinst == inst 
+                           select c.Value).OrderBy(c=>c.bestcode()).ToList();
+                memo("# courses = " + qcourse.Count());
+
                 string startsem = "VT22";
                 string endsem = "HT26";
                 
@@ -680,6 +1189,11 @@ namespace ProgramPrognos
 
                 memo(detailsheet.Name);
                 DetailSheet(detailsheet, qprog, startsem, endsem,inst);
+
+                Excel.Worksheet coursesheet = xldict[inst].Sheets.Add();
+                coursesheet.Name = coursesheetname;
+                memo(coursesheet.Name);
+                CourseSheet(coursesheet, qprog, qcourse, startsem, endsem);
 
                 //mainsheet.Select();
 

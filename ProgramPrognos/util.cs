@@ -208,6 +208,15 @@ namespace ProgramPrognos
 
         }
 
+        public static string find_batstart(string currentsem,int isem)
+            //find the batch that is in T-isem during currentsem
+        {
+            if (isem == 1)
+                return currentsem;
+            else
+                return shiftsemester(currentsem, 1 - isem);
+        }
+
         public static string incrementsemester(string sem)
         {
             if (sem.StartsWith("VT"))
@@ -284,6 +293,12 @@ namespace ProgramPrognos
                 fn = fnbase.Replace(suffix, i + suffix);
             }
             return fn;
+        }
+
+        public static string yymmdd()
+        {
+            DateTime now = DateTime.Now;
+            return now.Year + "-" + now.Month + "-" + now.Day;
         }
 
         public static string timestampfolder(string folder)

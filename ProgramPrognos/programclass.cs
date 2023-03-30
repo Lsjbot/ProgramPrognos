@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Text.RegularExpressions;
 
 namespace ProgramPrognos
 {
@@ -14,13 +15,17 @@ namespace ProgramPrognos
         public static double defaultretention = 0.85; //per semester
 
         public string name = "";
-        public List<string> codelist = new List<string>();
+        public List<string> coursecodelist = new List<string>();
+        public List<string> applcodelist = new List<string>();
         public string subjectcode = "";
         public int id = -1;
         public int semesters = -1;
+        public double hp = -1;
         public string area = ""; // L = lärarutb, V = vårdutb, T = Teknik500, blank = övrigt
         public string subject = "x";
         public string sector = "x";
+        public string utype = "Program";
+        public string partofpackage = "";
         public static Dictionary<string, string> areanamedict = new Dictionary<string, string>()
         {
             {"L","Lärarutbildning" },
@@ -31,7 +36,8 @@ namespace ProgramPrognos
         public string homeinst = Form1.utaninst;
 
         //Kullar och övergångar
-        public List<programbatchclass> batchlist = new List<programbatchclass>(); //alla kullar, inklusive extrapolerade
+        public List<programbatchclass> batchlist = new List<programbatchclass>(); //alla kullar, inklusive extrapolerade, både betalande och anslagsfinansierade
+        public List<programbatchclass> payingbatchlist = new List<programbatchclass>(); //alla kullar, inklusive extrapolerade, enbart betalande
         public transitionclass[] transition = new transitionclass[programbatchclass.maxsem];   //transition from Tn to Tn+1
         public transitionclass[] examtransition = new transitionclass[programbatchclass.maxsem]; //transition from Tn to exam
         public transitionclass[] appltransition = new transitionclass[programbatchclass.maxsem]; //transition from applicants to Tn
@@ -51,8 +57,15 @@ namespace ProgramPrognos
         public Dictionary<int, Dictionary<string, forecastrangeclass>> yearinstprodrangedict = new Dictionary<int, Dictionary<string, forecastrangeclass>>(); //per år per inst prod
         public Dictionary<int, forecastrangeclass> examforecastrangedict = new Dictionary<int, forecastrangeclass>();
 
+        //Kurser i programmet
+        public Dictionary<int, Dictionary<string, double>> coursedict = new Dictionary<int, Dictionary<string, double>>(); // [termin][kursnamn][andel av stud]; kursnamn är index till fkdict
+
+        //diverse
         public double averageaccepted = 0;
         public bool fk = false; //fristående kurser som pseudo-program
+        public double fee = 0; //payment for whole program, for paying students
+        public Dictionary<string, double> studentpengarea = new Dictionary<string, double>();
+        public bool activecourse = false; //either fed from program or with recent HST
 
         public programclass clone(bool keepstudents)
         {
@@ -67,9 +80,16 @@ namespace ProgramPrognos
             pc.averageaccepted = keepstudents? this.averageaccepted : 0;
             pc.fk = this.fk;
             pc.homeinst = this.homeinst;
+            pc.semesters = this.semesters;
+            pc.hp = this.hp;
+            pc.utype = this.utype;
+            pc.fee = this.fee;
+            pc.partofpackage = this.partofpackage;
 
-            foreach (string cl in this.codelist)
-                pc.codelist.Add(cl);
+            foreach (string cl in this.coursecodelist)
+                pc.coursecodelist.Add(cl);
+            foreach (string cl in this.applcodelist)
+                pc.applcodelist.Add(cl);
 
             if (keepstudents)
             {
@@ -92,7 +112,8 @@ namespace ProgramPrognos
         {
             programclass pc = qprog.First().clone(false); //basic data frpm first in list
             pc.name = "Nytt program";
-            pc.codelist.Clear();
+            pc.coursecodelist.Clear();
+            pc.applcodelist.Clear();
             pc.batchlist.Clear();
             pc.transition = transitionclass.average((from c in qprog select c.transition).ToList());
             pc.examtransition = transitionclass.average((from c in qprog select c.examtransition).ToList());
@@ -614,6 +635,32 @@ namespace ProgramPrognos
             }
         }
 
+        public double[] batchsemsum(string beforebatch)
+        {
+            double[] tstud = new double[programbatchclass.maxsem];
+            for (int i = 0; i < programbatchclass.maxsem; i++)
+                tstud[i] = 0;
+            programbatchclass pb = null;
+            string bstart = beforebatch;
+            do
+            {
+                pb = this.getnextbatch(bstart);
+                if (pb != null)
+                {
+                    for (int i = 1; i <= this.semesters; i++)
+                    {
+                        double? xstud = pb.getactualstud(i);
+                        if (xstud > 0)
+                            tstud[i] += (double)xstud;
+                    }
+                    bstart = pb.batchstart;
+                }
+            }
+            while (pb != null);
+            return tstud;
+        }
+
+
         public int examsum(int startyear,int endyear)
         {
             double sum = 0;
@@ -634,6 +681,22 @@ namespace ProgramPrognos
             else if (name.ToLower().Contains("magister"))
                 return true;
             return false;
+        }
+
+        string rex1 = @"[GA]([\p{Lu}][\p{Lu}])\w+";
+        string rex2 = @"([\p{Lu}][\p{Lu}])\w+";
+        public string bestcode()
+        {
+            foreach (string code in coursecodelist)
+            {
+                foreach (Match m in Regex.Matches(code, rex1))
+                {
+                    return code;
+                }
+            }
+            if (coursecodelist.Count > 0)
+                return coursecodelist.First();
+            return "";
         }
     }
 
