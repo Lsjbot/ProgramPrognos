@@ -1963,7 +1963,7 @@ namespace ProgramPrognos
                         //{
                         //    memo(prog + "\t" + code + "\t" + sem + "\t" + pc.coursedict[sem][code] + "\t" + tstud[sem]);
                         //}
-                        if (normstud < 0.01 || pc.coursedict[sem][code] <= 1)
+                        if ((normstud < 0.01 || pc.coursedict[sem][code] <= 1) && pc.utype != "Kurspaket")
                         {
                             zeroed++;
                             normstud = 0;
@@ -2009,8 +2009,16 @@ namespace ProgramPrognos
                     s4[0] = "VÅ";
                 if (!lokal_ers_hpr.ContainsKey(s4[0]))
                     memo(s);
-                dict.Add(s4[0], 0.01 * util.tryconvertdouble(s4[1]));
+                double frac = 0.01 * util.tryconvertdouble(s4[1]);
+                if (s4[0] == "MM") //Media 352 hst egentligen, bara 20 tillåtna
+                {
+                    double frac2 = (frac * (352 - 20)) / 352;
+                    frac = (frac * 20) / 352;
+                    dict.Add("TE", frac2);
+                }
+                dict.Add(s4[0], frac);
 
+                
             }
             return dict;
         }

@@ -34,16 +34,17 @@ namespace ProgramPrognos
             this.TBlastsem = new System.Windows.Forms.TextBox();
             this.label1 = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.RB_homeinst = new System.Windows.Forms.RadioButton();
             this.RB_minorprog = new System.Windows.Forms.RadioButton();
+            this.RB_homeinst = new System.Windows.Forms.RadioButton();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // Excelbutton
             // 
-            this.Excelbutton.Location = new System.Drawing.Point(653, 195);
+            this.Excelbutton.Location = new System.Drawing.Point(980, 300);
+            this.Excelbutton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Excelbutton.Name = "Excelbutton";
-            this.Excelbutton.Size = new System.Drawing.Size(116, 48);
+            this.Excelbutton.Size = new System.Drawing.Size(174, 74);
             this.Excelbutton.TabIndex = 0;
             this.Excelbutton.Text = "Make Excel files";
             this.Excelbutton.UseVisualStyleBackColor = true;
@@ -51,26 +52,29 @@ namespace ProgramPrognos
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(35, 30);
+            this.richTextBox1.Location = new System.Drawing.Point(52, 46);
+            this.richTextBox1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(391, 278);
+            this.richTextBox1.Size = new System.Drawing.Size(584, 426);
             this.richTextBox1.TabIndex = 1;
             this.richTextBox1.Text = "";
             // 
             // TBlastsem
             // 
-            this.TBlastsem.Location = new System.Drawing.Point(713, 112);
+            this.TBlastsem.Location = new System.Drawing.Point(1070, 172);
+            this.TBlastsem.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.TBlastsem.Name = "TBlastsem";
-            this.TBlastsem.Size = new System.Drawing.Size(56, 20);
+            this.TBlastsem.Size = new System.Drawing.Size(82, 26);
             this.TBlastsem.TabIndex = 2;
             this.TBlastsem.Text = "VT23";
             // 
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(586, 115);
+            this.label1.Location = new System.Drawing.Point(879, 177);
+            this.label1.Margin = new System.Windows.Forms.Padding(4, 0, 4, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(121, 13);
+            this.label1.Size = new System.Drawing.Size(182, 20);
             this.label1.TabIndex = 3;
             this.label1.Text = "Last semester with data:";
             // 
@@ -78,45 +82,50 @@ namespace ProgramPrognos
             // 
             this.panel1.Controls.Add(this.RB_minorprog);
             this.panel1.Controls.Add(this.RB_homeinst);
-            this.panel1.Location = new System.Drawing.Point(596, 273);
+            this.panel1.Location = new System.Drawing.Point(894, 420);
+            this.panel1.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.panel1.Name = "panel1";
-            this.panel1.Size = new System.Drawing.Size(200, 54);
+            this.panel1.Size = new System.Drawing.Size(300, 83);
             this.panel1.TabIndex = 4;
+            // 
+            // RB_minorprog
+            // 
+            this.RB_minorprog.AutoSize = true;
+            this.RB_minorprog.Location = new System.Drawing.Point(4, 40);
+            this.RB_minorprog.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.RB_minorprog.Name = "RB_minorprog";
+            this.RB_minorprog.Size = new System.Drawing.Size(243, 24);
+            this.RB_minorprog.TabIndex = 1;
+            this.RB_minorprog.Text = "Also programs with minor part";
+            this.RB_minorprog.UseVisualStyleBackColor = true;
             // 
             // RB_homeinst
             // 
             this.RB_homeinst.AutoSize = true;
             this.RB_homeinst.Checked = true;
-            this.RB_homeinst.Location = new System.Drawing.Point(3, 3);
+            this.RB_homeinst.Location = new System.Drawing.Point(4, 5);
+            this.RB_homeinst.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.RB_homeinst.Name = "RB_homeinst";
-            this.RB_homeinst.Size = new System.Drawing.Size(140, 17);
+            this.RB_homeinst.Size = new System.Drawing.Size(209, 24);
             this.RB_homeinst.TabIndex = 0;
             this.RB_homeinst.TabStop = true;
             this.RB_homeinst.Text = "Home inst programs only";
             this.RB_homeinst.UseVisualStyleBackColor = true;
             // 
-            // RB_minorprog
-            // 
-            this.RB_minorprog.AutoSize = true;
-            this.RB_minorprog.Location = new System.Drawing.Point(3, 26);
-            this.RB_minorprog.Name = "RB_minorprog";
-            this.RB_minorprog.Size = new System.Drawing.Size(162, 17);
-            this.RB_minorprog.TabIndex = 1;
-            this.RB_minorprog.Text = "Also programs with minor part";
-            this.RB_minorprog.UseVisualStyleBackColor = true;
-            // 
             // ExcelForm
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 450);
+            this.ClientSize = new System.Drawing.Size(1200, 811);
             this.Controls.Add(this.panel1);
             this.Controls.Add(this.label1);
             this.Controls.Add(this.TBlastsem);
             this.Controls.Add(this.richTextBox1);
             this.Controls.Add(this.Excelbutton);
+            this.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
             this.Name = "ExcelForm";
             this.Text = "ExcelForm";
+            this.Load += new System.EventHandler(this.ExcelForm_Load);
             this.panel1.ResumeLayout(false);
             this.panel1.PerformLayout();
             this.ResumeLayout(false);
