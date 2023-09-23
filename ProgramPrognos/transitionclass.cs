@@ -42,21 +42,53 @@ namespace ProgramPrognos
         public static transitionclass[] average(List<transitionclass[]> qt) //creates a new transitionclass that is average of the list
         {
             transitionclass[] tc = new transitionclass[qt.First().Length];
-            for (int i=0;i<tc.Length;i++)
+            for (int i = 0; i < tc.Length; i++)
             {
                 if (qt.First()[i] == null)
                     break;
                 tc[i] = new transitionclass(0, 0);
+                int nt = 0;
                 foreach (transitionclass[] tc2 in qt)
                 {
-                    tc[i].transitionprob += tc2[i].transitionprob;
-                    tc[i].transitionsig += tc2[i].transitionsig;
+                    if (tc2[i] != null)
+                    {
+                        tc[i].transitionprob += tc2[i].transitionprob;
+                        tc[i].transitionsig += tc2[i].transitionsig;
+                        nt++;
+                    }
                 }
-                tc[i].transitionprob /= qt.Count;
-                tc[i].transitionsig /= qt.Count;
+                if (nt > 0)
+                {
+                    tc[i].transitionprob /= nt;
+                    tc[i].transitionsig /= nt;
+                }
+                else
+                    tc[i].transitionprob = 0.8; ;
+
             }
 
             return tc;
+        }
+
+        public transitionclass clone()
+        {
+            return new transitionclass(this.transitionprob, this.transitionsig);
+        }
+
+        public static transitionclass[] clone(transitionclass[] oldarray)
+        {
+            transitionclass[] newarray = new transitionclass[oldarray.Length];
+            for (int i = 0; i < oldarray.Length; i++)
+                newarray[i] = oldarray[i].clone();
+            return newarray;
+        }
+
+        public static Dictionary<int, transitionclass[]> clone(Dictionary<int, transitionclass[]> olddict)
+        {
+            Dictionary<int, transitionclass[]> newdict = new Dictionary<int, transitionclass[]>();
+            foreach (int key in olddict.Keys)
+                newdict.Add(key, transitionclass.clone(olddict[key]));
+            return newdict;
         }
     }
 }

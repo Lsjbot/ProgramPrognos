@@ -20,8 +20,10 @@ namespace ProgramPrognos
         public static double?[] nulldouble = new double?[] { null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null };
         public double? actualexam = null;
         public double? forecastexam = null;
-        public double applicants = 0;
+        //0=appl, 1=U1, 2=U2, 3=final accepted
+        public double?[] applicants = new double?[4] { null,null,null,null };  
         public double reserves = 0;
+        public double budget_T1 = 0;
         public bool actualbatch = true; //true for batch with real data, false for pure forecast
 
         public programbatchclass cloneactual() //only clone batches with real data, not forecast 
@@ -29,7 +31,7 @@ namespace ProgramPrognos
             if (!actualbatch)
                 return null;
 
-            return new programbatchclass(this.actualsemstud,this.progid,this.batchstart,(int)this.actualexam,(int)this.applicants, (int)this.reserves);
+            return new programbatchclass(this.actualsemstud,this.progid,this.batchstart,(int)this.actualexam,this.applicants, (int)this.reserves);
             
         }
 
@@ -64,7 +66,7 @@ namespace ProgramPrognos
             forecastsemstud[0] = null;
         }
 
-        public programbatchclass(double?[] actualstud, int prog, string bstart, int exam, int appl, int res) //real data
+        public programbatchclass(double?[] actualstud, int prog, string bstart, int exam, double?[] appl, int res) //real data
         {
             maxid++;
             this.id = maxid;
@@ -74,7 +76,7 @@ namespace ProgramPrognos
             actualsemstud = actualstud;
             forecastsemstud[0] = null;
             actualexam = exam;
-            applicants = appl;
+            Array.Copy(appl,this.applicants,4);
             reserves = res;
         }
 
@@ -106,7 +108,9 @@ namespace ProgramPrognos
 
         public double getstud(int sem) //termin i programmet; sem=1 => T1 etc.
         {
-            if (actualsemstud[sem] != null)
+            if (actualsemstud.Length < sem+1)
+                return 0;
+            else if (actualsemstud[sem] != null)
                 return (double)actualsemstud[sem];
             else if (forecastsemstud[sem] != null)
                 return (double)forecastsemstud[sem];

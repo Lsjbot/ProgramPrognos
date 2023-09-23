@@ -40,7 +40,7 @@ namespace ProgramPrognos
         public List<programbatchclass> payingbatchlist = new List<programbatchclass>(); //alla kullar, inklusive extrapolerade, enbart betalande
         public transitionclass[] transition = new transitionclass[programbatchclass.maxsem];   //transition from Tn to Tn+1
         public transitionclass[] examtransition = new transitionclass[programbatchclass.maxsem]; //transition from Tn to exam
-        public transitionclass[] appltransition = new transitionclass[programbatchclass.maxsem]; //transition from applicants to Tn
+        public Dictionary<int, transitionclass[]> appltransition = new Dictionary<int, transitionclass[]>(); //transition from applicants to Tn
 
         //Referensvärden:
         public fracprodclass totalprod = new fracprodclass(); //totalt referensåret
@@ -72,10 +72,14 @@ namespace ProgramPrognos
             programclass pc = new programclass(this.name, this.semesters, this.area);
             pc.transition = this.transition;
             pc.examtransition = this.examtransition;
-            pc.appltransition = this.appltransition;
-            pc.totalprod = this.totalprod;
+            pc.appltransition = transitionclass.clone(this.appltransition);
+            pc.totalprod = this.totalprod.clone();
+            pc.fracproddict.Add(Form1.hda, pc.totalprod.clone());
             pc.prod_per_student = this.prod_per_student;
-            pc.fracproddict = this.fracproddict;
+            //pc.fracproddict = this.fracproddict;
+            pc.fracproddict = new Dictionary<string, fracprodclass>();
+            foreach (string inst in this.fracproddict.Keys)
+                pc.fracproddict.Add(inst, this.fracproddict[inst].clone());
             //pc.yearproddict = this.yearproddict;
             pc.averageaccepted = keepstudents? this.averageaccepted : 0;
             pc.fk = this.fk;
@@ -117,7 +121,8 @@ namespace ProgramPrognos
             pc.batchlist.Clear();
             pc.transition = transitionclass.average((from c in qprog select c.transition).ToList());
             pc.examtransition = transitionclass.average((from c in qprog select c.examtransition).ToList());
-            pc.appltransition = transitionclass.average((from c in qprog select c.appltransition).ToList());
+            for (int j = 0; j < 4; j++)
+                pc.appltransition[j] = transitionclass.average((from c in qprog select c.appltransition[j]).ToList());
             pc.totalprod = fracprodclass.average((from c in qprog select c.totalprod).ToList());
             pc.prod_per_student = fracprodclass.average((from c in qprog select c.prod_per_student).ToList());
             pc.fracproddict.Clear();
@@ -127,6 +132,8 @@ namespace ProgramPrognos
                 if (qi.Count() > 0)
                     pc.fracproddict.Add(inst, fracprodclass.average(qi.ToList()));
             }
+
+            pc.fracproddict.Add(Form1.hda, pc.totalprod.clone());
 
             return pc;
         }
@@ -138,6 +145,8 @@ namespace ProgramPrognos
             this.id = maxid;
             if (this.name.StartsWith("FK "))
                 this.fk = true;
+            for (int i = 0; i < 4; i++)
+                this.appltransition.Add(i, new transitionclass[programbatchclass.maxsem]);
         }
 
         public programclass(string namepar, int sem, string progarea)
@@ -149,6 +158,8 @@ namespace ProgramPrognos
                 this.fk = true;
             this.semesters = sem;
             this.area = progarea;
+            for (int i = 0; i < 4; i++)
+                this.appltransition.Add(i, new transitionclass[programbatchclass.maxsem]);
         }
 
         public programclass(string namepar,int sem, double ret, string progarea)
@@ -163,6 +174,9 @@ namespace ProgramPrognos
             this.extendretention(ret);
             this.prod_per_student = generate_prod(30000, 20000, 0.8);
             this.fracproddict.Add(Form1.utaninst, prod_per_student.clone());
+            this.fracproddict.Add(Form1.hda, this.totalprod.clone());
+            for (int i = 0; i < 4; i++)
+                this.appltransition.Add(i, new transitionclass[programbatchclass.maxsem]);
         }
 
         public fracprodclass generate_prod(double hstpeng,double hprpeng,double prestation)
@@ -225,6 +239,8 @@ namespace ProgramPrognos
             Console.WriteLine(name + ": " + hst);
             if (!fracproddict.ContainsKey(inst))
                 fracproddict.Add(inst, new fracprodclass());
+            if (!fracproddict.ContainsKey(Form1.hda))
+                fracproddict.Add(Form1.hda, new fracprodclass());
             totalprod.frachst += hst;
             totalprod.frachpr += hpr;
             totalprod.frachstmoney += hstkr;
@@ -237,6 +253,12 @@ namespace ProgramPrognos
             fracproddict[inst].frachprmoney += hprkr;
             fracproddict[inst].fracmoney += kr;
             fracproddict[inst].updatepeng();
+            fracproddict[Form1.hda].frachst += hst;
+            fracproddict[Form1.hda].frachpr += hpr;
+            fracproddict[Form1.hda].frachstmoney += hstkr;
+            fracproddict[Form1.hda].frachprmoney += hprkr;
+            fracproddict[Form1.hda].fracmoney += kr;
+            fracproddict[Form1.hda].updatepeng();
         }
 
         public void fill_transition_gaps()
@@ -259,7 +281,7 @@ namespace ProgramPrognos
             //double defaultexamprob = 0.8;
             Dictionary<int, double[]> tdict = new Dictionary<int, double[]>();
             Dictionary<int, double[]> tdictexam = new Dictionary<int, double[]>();
-            Dictionary<int, double[]> tdictappl = new Dictionary<int, double[]>();
+            Dictionary<int, Dictionary<int, double[]>> tdictappl = new Dictionary<int, Dictionary<int, double[]>>();
             int nacc = 0;
             double sumacc = 0;
             foreach (programbatchclass bc in batchlist)
@@ -293,16 +315,21 @@ namespace ProgramPrognos
                         }
                     }
                     //från sökande till termin:
-                    if (bc.applicants > 0)
+                    for (int j = 0; j < 4; j++)
                     {
-                        if (tdictappl.ContainsKey(i))
+                        if (!tdictappl.ContainsKey(j))
+                            tdictappl.Add(j, new Dictionary<int, double[]>());
+                        if (bc.applicants[j] > 0)
                         {
-                            tdictappl[i][0] += bc.getstud(i);
-                            tdictappl[i][1] += (double)bc.applicants;
-                        }
-                        else
-                        {
-                            tdictappl.Add(i, new double[] { bc.getstud(i), (double)bc.applicants });
+                            if (tdictappl[j].ContainsKey(i))
+                            {
+                                tdictappl[j][i][0] += bc.getstud(i);
+                                tdictappl[j][i][1] += (double)bc.applicants[j];
+                            }
+                            else
+                            {
+                                tdictappl[j].Add(i, new double[] { bc.getstud(i), (double)bc.applicants[j] });
+                            }
                         }
                     }
                 }
@@ -343,14 +370,19 @@ namespace ProgramPrognos
                 }
                 if (i <= this.semesters)
                 {
-                    if (tdictappl.ContainsKey(i))
+                    for (int j = 0; j < 4; j++)
                     {
-                        double tprob = tdictappl[i][0] / tdictappl[i][1];
-                        appltransition[i] = new transitionclass(tprob, Math.Sqrt(tprob));
-                        imax = i;
+                        if (!appltransition.ContainsKey(j))
+                            appltransition.Add(j,new transitionclass[programbatchclass.maxsem]);
+                        if (tdictappl.ContainsKey(j) && tdictappl[j].ContainsKey(i))
+                        {
+                            double tprob = tdictappl[j][i][0] / tdictappl[j][i][1];
+                            appltransition[j][i] = new transitionclass(tprob, Math.Sqrt(tprob));
+                            imax = i;
+                        }
+                        else
+                            appltransition[j][i] = null;// new transitionclass(defaultapplprob, Math.Sqrt(defaultapplprob));
                     }
-                    else
-                        appltransition[i] = null;// new transitionclass(defaultapplprob, Math.Sqrt(defaultapplprob));
                 }
             }
             //this.semesters = imax+1;
@@ -417,15 +449,23 @@ namespace ProgramPrognos
 
         public void set_homeinst()
         {
+            if (homeinst != Form1.utaninst)
+                return;
+
             double pmax = 0;
             foreach (string inst in fracproddict.Keys)
             {
+                if (inst == Form1.hda)
+                    continue;
                 if (fracproddict[inst].fracmoney > pmax)
                 {
                     homeinst = inst;
                     pmax = fracproddict[inst].fracmoney;
                 }
             }
+
+            if (homeinst == Form1.utaninst && name == "Produktionstekniker 120 hp")
+                homeinst = "Institutionen för information och teknik";
         }
 
         public Dictionary<string, double> extrapolate(bool futureadm, int endyear)

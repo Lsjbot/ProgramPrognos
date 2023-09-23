@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.IO;
+using System.Text.RegularExpressions;
 
 namespace ProgramPrognos
 {
@@ -316,7 +317,19 @@ namespace ProgramPrognos
 
         }
 
+        public static string hprex = @" \d+([\.\,]\d)? hp";
 
+        public static Tuple<string,double> extract_hp(string name)
+        {
+            
+            foreach (Match m in Regex.Matches(name, hprex))
+            {
+                double hp = util.tryconvertdouble(m.Value.Trim().Replace(" hp", ""));
+                string newname = name.Replace(m.Value, "").Trim(new char[]{ ' ',','});
+                return new Tuple<string, double>(newname, hp);
+            }
+            return new Tuple<string, double>(name, -1);
+        }
 
     }
 }
