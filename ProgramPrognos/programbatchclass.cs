@@ -108,6 +108,8 @@ namespace ProgramPrognos
 
         public double getstud(int sem) //termin i programmet; sem=1 => T1 etc.
         {
+            if (sem < 0)
+                return 0;
             if (actualsemstud.Length < sem+1)
                 return 0;
             else if (actualsemstud[sem] != null)

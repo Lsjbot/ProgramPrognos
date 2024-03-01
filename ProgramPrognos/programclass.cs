@@ -58,7 +58,12 @@ namespace ProgramPrognos
         public Dictionary<int, forecastrangeclass> examforecastrangedict = new Dictionary<int, forecastrangeclass>();
 
         //Kurser i programmet
+           // från program_programkurser_intag:
         public Dictionary<int, Dictionary<string, double>> coursedict = new Dictionary<int, Dictionary<string, double>>(); // [termin][kursnamn][andel av stud]; kursnamn är index till fkdict
+           // från Lokal ersättning programkurser:
+        public Dictionary<string, double> coursehstdict = new Dictionary<string, double>();
+        public Dictionary<string, double> courseincomedict = new Dictionary<string, double>();
+        public Dictionary<string, double> coursecostdict = new Dictionary<string, double>();
 
         //diverse
         public double averageaccepted = 0;

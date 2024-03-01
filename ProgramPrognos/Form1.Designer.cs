@@ -62,25 +62,28 @@ namespace ProgramPrognos
             this.Excelplanningbutton = new System.Windows.Forms.Button();
             this.coursedatabutton = new System.Windows.Forms.Button();
             this.testbutton = new System.Windows.Forms.Button();
+            this.Retentionbutton = new System.Windows.Forms.Button();
+            this.applicantbutton = new System.Windows.Forms.Button();
+            this.programprofitbutton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
             // 
             // richTextBox1
             // 
-            this.richTextBox1.Location = new System.Drawing.Point(18, 25);
-            this.richTextBox1.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.richTextBox1.Location = new System.Drawing.Point(12, 16);
+            this.richTextBox1.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.richTextBox1.Name = "richTextBox1";
-            this.richTextBox1.Size = new System.Drawing.Size(505, 612);
+            this.richTextBox1.Size = new System.Drawing.Size(338, 399);
             this.richTextBox1.TabIndex = 0;
             this.richTextBox1.Text = "";
             // 
             // Quitbutton
             // 
-            this.Quitbutton.Location = new System.Drawing.Point(924, 782);
-            this.Quitbutton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.Quitbutton.Location = new System.Drawing.Point(616, 508);
+            this.Quitbutton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.Quitbutton.Name = "Quitbutton";
-            this.Quitbutton.Size = new System.Drawing.Size(153, 80);
+            this.Quitbutton.Size = new System.Drawing.Size(102, 52);
             this.Quitbutton.TabIndex = 1;
             this.Quitbutton.Text = "Quit";
             this.Quitbutton.UseVisualStyleBackColor = true;
@@ -88,10 +91,10 @@ namespace ProgramPrognos
             // 
             // readdatabutton
             // 
-            this.readdatabutton.Location = new System.Drawing.Point(924, 702);
-            this.readdatabutton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.readdatabutton.Location = new System.Drawing.Point(616, 456);
+            this.readdatabutton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.readdatabutton.Name = "readdatabutton";
-            this.readdatabutton.Size = new System.Drawing.Size(153, 74);
+            this.readdatabutton.Size = new System.Drawing.Size(102, 48);
             this.readdatabutton.TabIndex = 2;
             this.readdatabutton.Text = "Read data";
             this.readdatabutton.UseVisualStyleBackColor = true;
@@ -100,10 +103,10 @@ namespace ProgramPrognos
             // businessbutton
             // 
             this.businessbutton.Enabled = false;
-            this.businessbutton.Location = new System.Drawing.Point(924, 571);
-            this.businessbutton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.businessbutton.Location = new System.Drawing.Point(616, 371);
+            this.businessbutton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.businessbutton.Name = "businessbutton";
-            this.businessbutton.Size = new System.Drawing.Size(153, 60);
+            this.businessbutton.Size = new System.Drawing.Size(102, 39);
             this.businessbutton.TabIndex = 3;
             this.businessbutton.Text = "Extrapolate business as usual";
             this.businessbutton.UseVisualStyleBackColor = true;
@@ -112,10 +115,10 @@ namespace ProgramPrognos
             // proddisplaybutton
             // 
             this.proddisplaybutton.Enabled = false;
-            this.proddisplaybutton.Location = new System.Drawing.Point(924, 402);
-            this.proddisplaybutton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.proddisplaybutton.Location = new System.Drawing.Point(616, 261);
+            this.proddisplaybutton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.proddisplaybutton.Name = "proddisplaybutton";
-            this.proddisplaybutton.Size = new System.Drawing.Size(153, 71);
+            this.proddisplaybutton.Size = new System.Drawing.Size(102, 46);
             this.proddisplaybutton.TabIndex = 4;
             this.proddisplaybutton.Text = "Production per institution";
             this.proddisplaybutton.UseVisualStyleBackColor = true;
@@ -123,10 +126,10 @@ namespace ProgramPrognos
             // 
             // loadscenariobutton
             // 
-            this.loadscenariobutton.Location = new System.Drawing.Point(924, 638);
-            this.loadscenariobutton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.loadscenariobutton.Location = new System.Drawing.Point(616, 415);
+            this.loadscenariobutton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.loadscenariobutton.Name = "loadscenariobutton";
-            this.loadscenariobutton.Size = new System.Drawing.Size(153, 55);
+            this.loadscenariobutton.Size = new System.Drawing.Size(102, 36);
             this.loadscenariobutton.TabIndex = 5;
             this.loadscenariobutton.Text = "Load scenario";
             this.loadscenariobutton.UseVisualStyleBackColor = true;
@@ -135,10 +138,10 @@ namespace ProgramPrognos
             // savescenariobutton
             // 
             this.savescenariobutton.Enabled = false;
-            this.savescenariobutton.Location = new System.Drawing.Point(924, 505);
-            this.savescenariobutton.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.savescenariobutton.Location = new System.Drawing.Point(616, 328);
+            this.savescenariobutton.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.savescenariobutton.Name = "savescenariobutton";
-            this.savescenariobutton.Size = new System.Drawing.Size(153, 60);
+            this.savescenariobutton.Size = new System.Drawing.Size(102, 39);
             this.savescenariobutton.TabIndex = 6;
             this.savescenariobutton.Text = "Save scenario";
             this.savescenariobutton.UseVisualStyleBackColor = true;
@@ -147,18 +150,20 @@ namespace ProgramPrognos
             // datafolderlabel
             // 
             this.datafolderlabel.AutoSize = true;
-            this.datafolderlabel.Location = new System.Drawing.Point(555, 37);
+            this.datafolderlabel.Location = new System.Drawing.Point(370, 24);
+            this.datafolderlabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.datafolderlabel.Name = "datafolderlabel";
-            this.datafolderlabel.Size = new System.Drawing.Size(51, 20);
+            this.datafolderlabel.Size = new System.Drawing.Size(35, 13);
             this.datafolderlabel.TabIndex = 8;
             this.datafolderlabel.Text = "label2";
             // 
             // docfolderlabel
             // 
             this.docfolderlabel.AutoSize = true;
-            this.docfolderlabel.Location = new System.Drawing.Point(555, 69);
+            this.docfolderlabel.Location = new System.Drawing.Point(370, 45);
+            this.docfolderlabel.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.docfolderlabel.Name = "docfolderlabel";
-            this.docfolderlabel.Size = new System.Drawing.Size(51, 20);
+            this.docfolderlabel.Size = new System.Drawing.Size(35, 13);
             this.docfolderlabel.TabIndex = 9;
             this.docfolderlabel.Text = "label3";
             // 
@@ -169,9 +174,10 @@ namespace ProgramPrognos
             // examtestbutton
             // 
             this.examtestbutton.Enabled = false;
-            this.examtestbutton.Location = new System.Drawing.Point(924, 318);
+            this.examtestbutton.Location = new System.Drawing.Point(616, 207);
+            this.examtestbutton.Margin = new System.Windows.Forms.Padding(2);
             this.examtestbutton.Name = "examtestbutton";
-            this.examtestbutton.Size = new System.Drawing.Size(153, 60);
+            this.examtestbutton.Size = new System.Drawing.Size(102, 39);
             this.examtestbutton.TabIndex = 10;
             this.examtestbutton.Text = "Test exam forecast";
             this.examtestbutton.UseVisualStyleBackColor = true;
@@ -180,9 +186,10 @@ namespace ProgramPrognos
             // buttonExamforecast
             // 
             this.buttonExamforecast.Enabled = false;
-            this.buttonExamforecast.Location = new System.Drawing.Point(924, 231);
+            this.buttonExamforecast.Location = new System.Drawing.Point(616, 150);
+            this.buttonExamforecast.Margin = new System.Windows.Forms.Padding(2);
             this.buttonExamforecast.Name = "buttonExamforecast";
-            this.buttonExamforecast.Size = new System.Drawing.Size(153, 62);
+            this.buttonExamforecast.Size = new System.Drawing.Size(102, 40);
             this.buttonExamforecast.TabIndex = 11;
             this.buttonExamforecast.Text = "Exam forecast per program";
             this.buttonExamforecast.UseVisualStyleBackColor = true;
@@ -190,9 +197,10 @@ namespace ProgramPrognos
             // 
             // TBxrounds
             // 
-            this.TBxrounds.Location = new System.Drawing.Point(780, 582);
+            this.TBxrounds.Location = new System.Drawing.Point(520, 378);
+            this.TBxrounds.Margin = new System.Windows.Forms.Padding(2);
             this.TBxrounds.Name = "TBxrounds";
-            this.TBxrounds.Size = new System.Drawing.Size(100, 26);
+            this.TBxrounds.Size = new System.Drawing.Size(68, 20);
             this.TBxrounds.TabIndex = 12;
             this.TBxrounds.Text = "20";
             this.TBxrounds.TextChanged += new System.EventHandler(this.TBxrounds_TextChanged);
@@ -200,9 +208,10 @@ namespace ProgramPrognos
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(748, 558);
+            this.label1.Location = new System.Drawing.Point(499, 363);
+            this.label1.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label1.Name = "label1";
-            this.label1.Size = new System.Drawing.Size(159, 20);
+            this.label1.Size = new System.Drawing.Size(106, 13);
             this.label1.TabIndex = 13;
             this.label1.Text = "Extrapolation rounds:";
             // 
@@ -211,9 +220,11 @@ namespace ProgramPrognos
             this.groupBox1.Controls.Add(this.RBnursingexam);
             this.groupBox1.Controls.Add(this.RBteacherexam);
             this.groupBox1.Controls.Add(this.RBallexam);
-            this.groupBox1.Location = new System.Drawing.Point(718, 214);
+            this.groupBox1.Location = new System.Drawing.Point(479, 139);
+            this.groupBox1.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox1.Name = "groupBox1";
-            this.groupBox1.Size = new System.Drawing.Size(200, 122);
+            this.groupBox1.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox1.Size = new System.Drawing.Size(133, 79);
             this.groupBox1.TabIndex = 14;
             this.groupBox1.TabStop = false;
             this.groupBox1.Text = "Exam area";
@@ -221,9 +232,10 @@ namespace ProgramPrognos
             // RBnursingexam
             // 
             this.RBnursingexam.AutoSize = true;
-            this.RBnursingexam.Location = new System.Drawing.Point(6, 85);
+            this.RBnursingexam.Location = new System.Drawing.Point(4, 55);
+            this.RBnursingexam.Margin = new System.Windows.Forms.Padding(2);
             this.RBnursingexam.Name = "RBnursingexam";
-            this.RBnursingexam.Size = new System.Drawing.Size(138, 24);
+            this.RBnursingexam.Size = new System.Drawing.Size(94, 17);
             this.RBnursingexam.TabIndex = 2;
             this.RBnursingexam.TabStop = true;
             this.RBnursingexam.Text = "Nursing exams";
@@ -232,9 +244,10 @@ namespace ProgramPrognos
             // RBteacherexam
             // 
             this.RBteacherexam.AutoSize = true;
-            this.RBteacherexam.Location = new System.Drawing.Point(6, 55);
+            this.RBteacherexam.Location = new System.Drawing.Point(4, 36);
+            this.RBteacherexam.Margin = new System.Windows.Forms.Padding(2);
             this.RBteacherexam.Name = "RBteacherexam";
-            this.RBteacherexam.Size = new System.Drawing.Size(142, 24);
+            this.RBteacherexam.Size = new System.Drawing.Size(98, 17);
             this.RBteacherexam.TabIndex = 1;
             this.RBteacherexam.TabStop = true;
             this.RBteacherexam.Text = "Teacher exams";
@@ -244,9 +257,10 @@ namespace ProgramPrognos
             // 
             this.RBallexam.AutoSize = true;
             this.RBallexam.Checked = true;
-            this.RBallexam.Location = new System.Drawing.Point(6, 25);
+            this.RBallexam.Location = new System.Drawing.Point(4, 16);
+            this.RBallexam.Margin = new System.Windows.Forms.Padding(2);
             this.RBallexam.Name = "RBallexam";
-            this.RBallexam.Size = new System.Drawing.Size(51, 24);
+            this.RBallexam.Size = new System.Drawing.Size(36, 17);
             this.RBallexam.TabIndex = 0;
             this.RBallexam.TabStop = true;
             this.RBallexam.Text = "All";
@@ -257,9 +271,11 @@ namespace ProgramPrognos
             this.groupBox2.Controls.Add(this.CBFK);
             this.groupBox2.Controls.Add(this.CBshortprogram);
             this.groupBox2.Controls.Add(this.CBlongprogram);
-            this.groupBox2.Location = new System.Drawing.Point(718, 342);
+            this.groupBox2.Location = new System.Drawing.Point(479, 222);
+            this.groupBox2.Margin = new System.Windows.Forms.Padding(2);
             this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(200, 112);
+            this.groupBox2.Padding = new System.Windows.Forms.Padding(2);
+            this.groupBox2.Size = new System.Drawing.Size(133, 73);
             this.groupBox2.TabIndex = 15;
             this.groupBox2.TabStop = false;
             this.groupBox2.Text = "Type of study";
@@ -269,9 +285,10 @@ namespace ProgramPrognos
             this.CBFK.AutoSize = true;
             this.CBFK.Checked = true;
             this.CBFK.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CBFK.Location = new System.Drawing.Point(6, 85);
+            this.CBFK.Location = new System.Drawing.Point(4, 55);
+            this.CBFK.Margin = new System.Windows.Forms.Padding(2);
             this.CBFK.Name = "CBFK";
-            this.CBFK.Size = new System.Drawing.Size(55, 24);
+            this.CBFK.Size = new System.Drawing.Size(39, 17);
             this.CBFK.TabIndex = 2;
             this.CBFK.Text = "FK";
             this.CBFK.UseVisualStyleBackColor = true;
@@ -281,9 +298,10 @@ namespace ProgramPrognos
             this.CBshortprogram.AutoSize = true;
             this.CBshortprogram.Checked = true;
             this.CBshortprogram.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CBshortprogram.Location = new System.Drawing.Point(6, 55);
+            this.CBshortprogram.Location = new System.Drawing.Point(4, 36);
+            this.CBshortprogram.Margin = new System.Windows.Forms.Padding(2);
             this.CBshortprogram.Name = "CBshortprogram";
-            this.CBshortprogram.Size = new System.Drawing.Size(145, 24);
+            this.CBshortprogram.Size = new System.Drawing.Size(97, 17);
             this.CBshortprogram.TabIndex = 1;
             this.CBshortprogram.Text = "Program (short)";
             this.CBshortprogram.UseVisualStyleBackColor = true;
@@ -293,9 +311,10 @@ namespace ProgramPrognos
             this.CBlongprogram.AutoSize = true;
             this.CBlongprogram.Checked = true;
             this.CBlongprogram.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CBlongprogram.Location = new System.Drawing.Point(6, 25);
+            this.CBlongprogram.Location = new System.Drawing.Point(4, 16);
+            this.CBlongprogram.Margin = new System.Windows.Forms.Padding(2);
             this.CBlongprogram.Name = "CBlongprogram";
-            this.CBlongprogram.Size = new System.Drawing.Size(139, 24);
+            this.CBlongprogram.Size = new System.Drawing.Size(94, 17);
             this.CBlongprogram.TabIndex = 0;
             this.CBlongprogram.Text = "Program (long)";
             this.CBlongprogram.UseVisualStyleBackColor = true;
@@ -305,18 +324,20 @@ namespace ProgramPrognos
             this.CBfutureadm.AutoSize = true;
             this.CBfutureadm.Checked = true;
             this.CBfutureadm.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.CBfutureadm.Location = new System.Drawing.Point(702, 612);
+            this.CBfutureadm.Location = new System.Drawing.Point(468, 398);
+            this.CBfutureadm.Margin = new System.Windows.Forms.Padding(2);
             this.CBfutureadm.Name = "CBfutureadm";
-            this.CBfutureadm.Size = new System.Drawing.Size(216, 24);
+            this.CBfutureadm.Size = new System.Drawing.Size(145, 17);
             this.CBfutureadm.TabIndex = 16;
             this.CBfutureadm.Text = "Include future admissions";
             this.CBfutureadm.UseVisualStyleBackColor = true;
             // 
             // TB_moneylimit
             // 
-            this.TB_moneylimit.Location = new System.Drawing.Point(752, 458);
+            this.TB_moneylimit.Location = new System.Drawing.Point(501, 298);
+            this.TB_moneylimit.Margin = new System.Windows.Forms.Padding(2);
             this.TB_moneylimit.Name = "TB_moneylimit";
-            this.TB_moneylimit.Size = new System.Drawing.Size(145, 26);
+            this.TB_moneylimit.Size = new System.Drawing.Size(98, 20);
             this.TB_moneylimit.TabIndex = 17;
             this.TB_moneylimit.Text = "1000000";
             this.TB_moneylimit.TextChanged += new System.EventHandler(this.textBox1_TextChanged);
@@ -324,34 +345,38 @@ namespace ProgramPrognos
             // label2
             // 
             this.label2.AutoSize = true;
-            this.label2.Location = new System.Drawing.Point(555, 462);
+            this.label2.Location = new System.Drawing.Point(370, 300);
+            this.label2.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label2.Name = "label2";
-            this.label2.Size = new System.Drawing.Size(191, 20);
+            this.label2.Size = new System.Drawing.Size(129, 13);
             this.label2.TabIndex = 18;
             this.label2.Text = "Minibelopp särredovisning";
             // 
             // TB_endyear
             // 
-            this.TB_endyear.Location = new System.Drawing.Point(774, 682);
+            this.TB_endyear.Location = new System.Drawing.Point(516, 443);
+            this.TB_endyear.Margin = new System.Windows.Forms.Padding(2);
             this.TB_endyear.Name = "TB_endyear";
-            this.TB_endyear.Size = new System.Drawing.Size(100, 26);
+            this.TB_endyear.Size = new System.Drawing.Size(68, 20);
             this.TB_endyear.TabIndex = 19;
             this.TB_endyear.Text = "2028";
             // 
             // label3
             // 
             this.label3.AutoSize = true;
-            this.label3.Location = new System.Drawing.Point(698, 685);
+            this.label3.Location = new System.Drawing.Point(465, 445);
+            this.label3.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             this.label3.Name = "label3";
-            this.label3.Size = new System.Drawing.Size(72, 20);
+            this.label3.Size = new System.Drawing.Size(49, 13);
             this.label3.TabIndex = 20;
             this.label3.Text = "End year";
             // 
             // AppRegButton
             // 
-            this.AppRegButton.Location = new System.Drawing.Point(924, 162);
+            this.AppRegButton.Location = new System.Drawing.Point(616, 105);
+            this.AppRegButton.Margin = new System.Windows.Forms.Padding(2);
             this.AppRegButton.Name = "AppRegButton";
-            this.AppRegButton.Size = new System.Drawing.Size(154, 52);
+            this.AppRegButton.Size = new System.Drawing.Size(103, 34);
             this.AppRegButton.TabIndex = 21;
             this.AppRegButton.Text = "Applicant to registered";
             this.AppRegButton.UseVisualStyleBackColor = true;
@@ -359,10 +384,9 @@ namespace ProgramPrognos
             // 
             // FKbutton
             // 
-            this.FKbutton.Location = new System.Drawing.Point(18, 682);
-            this.FKbutton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.FKbutton.Location = new System.Drawing.Point(12, 443);
             this.FKbutton.Name = "FKbutton";
-            this.FKbutton.Size = new System.Drawing.Size(153, 60);
+            this.FKbutton.Size = new System.Drawing.Size(102, 39);
             this.FKbutton.TabIndex = 22;
             this.FKbutton.Text = "Analyze course data";
             this.FKbutton.UseVisualStyleBackColor = true;
@@ -370,10 +394,9 @@ namespace ProgramPrognos
             // 
             // HSTbutton
             // 
-            this.HSTbutton.Location = new System.Drawing.Point(20, 752);
-            this.HSTbutton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.HSTbutton.Location = new System.Drawing.Point(13, 489);
             this.HSTbutton.Name = "HSTbutton";
-            this.HSTbutton.Size = new System.Drawing.Size(178, 57);
+            this.HSTbutton.Size = new System.Drawing.Size(119, 37);
             this.HSTbutton.TabIndex = 23;
             this.HSTbutton.Text = "Read hst_hpr_utfall_budget";
             this.HSTbutton.UseVisualStyleBackColor = true;
@@ -381,10 +404,9 @@ namespace ProgramPrognos
             // 
             // Excelplanningbutton
             // 
-            this.Excelplanningbutton.Location = new System.Drawing.Point(924, 25);
-            this.Excelplanningbutton.Margin = new System.Windows.Forms.Padding(4, 5, 4, 5);
+            this.Excelplanningbutton.Location = new System.Drawing.Point(616, 16);
             this.Excelplanningbutton.Name = "Excelplanningbutton";
-            this.Excelplanningbutton.Size = new System.Drawing.Size(153, 52);
+            this.Excelplanningbutton.Size = new System.Drawing.Size(102, 34);
             this.Excelplanningbutton.TabIndex = 24;
             this.Excelplanningbutton.Text = "Make Excel planning file";
             this.Excelplanningbutton.UseVisualStyleBackColor = true;
@@ -392,9 +414,10 @@ namespace ProgramPrognos
             // 
             // coursedatabutton
             // 
-            this.coursedatabutton.Location = new System.Drawing.Point(924, 86);
+            this.coursedatabutton.Location = new System.Drawing.Point(616, 56);
+            this.coursedatabutton.Margin = new System.Windows.Forms.Padding(2);
             this.coursedatabutton.Name = "coursedatabutton";
-            this.coursedatabutton.Size = new System.Drawing.Size(153, 52);
+            this.coursedatabutton.Size = new System.Drawing.Size(102, 34);
             this.coursedatabutton.TabIndex = 25;
             this.coursedatabutton.Text = "Read course data";
             this.coursedatabutton.UseVisualStyleBackColor = true;
@@ -402,19 +425,53 @@ namespace ProgramPrognos
             // 
             // testbutton
             // 
-            this.testbutton.Location = new System.Drawing.Point(226, 685);
+            this.testbutton.Location = new System.Drawing.Point(151, 445);
+            this.testbutton.Margin = new System.Windows.Forms.Padding(2);
             this.testbutton.Name = "testbutton";
-            this.testbutton.Size = new System.Drawing.Size(124, 57);
+            this.testbutton.Size = new System.Drawing.Size(83, 37);
             this.testbutton.TabIndex = 26;
             this.testbutton.Text = "Test stuff";
             this.testbutton.UseVisualStyleBackColor = true;
             this.testbutton.Click += new System.EventHandler(this.testbutton_Click);
             // 
+            // Retentionbutton
+            // 
+            this.Retentionbutton.Location = new System.Drawing.Point(12, 533);
+            this.Retentionbutton.Name = "Retentionbutton";
+            this.Retentionbutton.Size = new System.Drawing.Size(120, 31);
+            this.Retentionbutton.TabIndex = 27;
+            this.Retentionbutton.Text = "Retentionstabell";
+            this.Retentionbutton.UseVisualStyleBackColor = true;
+            this.Retentionbutton.Click += new System.EventHandler(this.Retentionbutton_Click);
+            // 
+            // applicantbutton
+            // 
+            this.applicantbutton.Location = new System.Drawing.Point(138, 489);
+            this.applicantbutton.Name = "applicantbutton";
+            this.applicantbutton.Size = new System.Drawing.Size(110, 37);
+            this.applicantbutton.TabIndex = 28;
+            this.applicantbutton.Text = "Söktryckstabell";
+            this.applicantbutton.UseVisualStyleBackColor = true;
+            this.applicantbutton.Click += new System.EventHandler(this.applicantbutton_Click);
+            // 
+            // programprofitbutton
+            // 
+            this.programprofitbutton.Location = new System.Drawing.Point(137, 533);
+            this.programprofitbutton.Name = "programprofitbutton";
+            this.programprofitbutton.Size = new System.Drawing.Size(111, 31);
+            this.programprofitbutton.TabIndex = 29;
+            this.programprofitbutton.Text = "Programs lönsamhet";
+            this.programprofitbutton.UseVisualStyleBackColor = true;
+            this.programprofitbutton.Click += new System.EventHandler(this.programprofitbutton_Click);
+            // 
             // Form1
             // 
-            this.AutoScaleDimensions = new System.Drawing.SizeF(9F, 20F);
+            this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(1341, 878);
+            this.ClientSize = new System.Drawing.Size(894, 571);
+            this.Controls.Add(this.programprofitbutton);
+            this.Controls.Add(this.applicantbutton);
+            this.Controls.Add(this.Retentionbutton);
             this.Controls.Add(this.testbutton);
             this.Controls.Add(this.coursedatabutton);
             this.Controls.Add(this.Excelplanningbutton);
@@ -441,7 +498,7 @@ namespace ProgramPrognos
             this.Controls.Add(this.readdatabutton);
             this.Controls.Add(this.Quitbutton);
             this.Controls.Add(this.richTextBox1);
-            this.Margin = new System.Windows.Forms.Padding(3, 5, 3, 5);
+            this.Margin = new System.Windows.Forms.Padding(2, 3, 2, 3);
             this.Name = "Form1";
             this.Text = "Form1";
             this.groupBox1.ResumeLayout(false);
@@ -488,6 +545,9 @@ namespace ProgramPrognos
         private System.Windows.Forms.Button Excelplanningbutton;
         private System.Windows.Forms.Button coursedatabutton;
         private System.Windows.Forms.Button testbutton;
+        private System.Windows.Forms.Button Retentionbutton;
+        private System.Windows.Forms.Button applicantbutton;
+        private System.Windows.Forms.Button programprofitbutton;
     }
 }
 
