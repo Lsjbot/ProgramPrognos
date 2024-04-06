@@ -279,6 +279,11 @@ namespace ProgramPrognos
 
         }
 
+        public static int yearfromsem(string sem)
+        {
+            return year2to4(semtoint(sem));
+        }
+
         public static string unusedfn(string fnbase)
         {
             string suffix = ".txt";

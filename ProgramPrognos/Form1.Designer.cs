@@ -65,6 +65,7 @@ namespace ProgramPrognos
             this.Retentionbutton = new System.Windows.Forms.Button();
             this.applicantbutton = new System.Windows.Forms.Button();
             this.programprofitbutton = new System.Windows.Forms.Button();
+            this.button1 = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -464,11 +465,22 @@ namespace ProgramPrognos
             this.programprofitbutton.UseVisualStyleBackColor = true;
             this.programprofitbutton.Click += new System.EventHandler(this.programprofitbutton_Click);
             // 
+            // button1
+            // 
+            this.button1.Location = new System.Drawing.Point(255, 523);
+            this.button1.Name = "button1";
+            this.button1.Size = new System.Drawing.Size(95, 41);
+            this.button1.TabIndex = 30;
+            this.button1.Text = "Lönsamhet vs söktryck";
+            this.button1.UseVisualStyleBackColor = true;
+            this.button1.Click += new System.EventHandler(this.button1_Click_1);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(894, 571);
+            this.Controls.Add(this.button1);
             this.Controls.Add(this.programprofitbutton);
             this.Controls.Add(this.applicantbutton);
             this.Controls.Add(this.Retentionbutton);
@@ -548,6 +560,7 @@ namespace ProgramPrognos
         private System.Windows.Forms.Button Retentionbutton;
         private System.Windows.Forms.Button applicantbutton;
         private System.Windows.Forms.Button programprofitbutton;
+        private System.Windows.Forms.Button button1;
     }
 }
 

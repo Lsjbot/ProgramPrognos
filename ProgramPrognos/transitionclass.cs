@@ -77,9 +77,16 @@ namespace ProgramPrognos
 
         public static transitionclass[] clone(transitionclass[] oldarray)
         {
+            if (oldarray == null)
+                return null;
             transitionclass[] newarray = new transitionclass[oldarray.Length];
             for (int i = 0; i < oldarray.Length; i++)
-                newarray[i] = oldarray[i].clone();
+            {
+                if (oldarray[i] == null)
+                    newarray[i] = null;
+                else
+                    newarray[i] = oldarray[i].clone();
+            }
             return newarray;
         }
 

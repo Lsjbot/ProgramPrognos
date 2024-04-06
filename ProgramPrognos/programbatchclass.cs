@@ -25,6 +25,8 @@ namespace ProgramPrognos
         public double reserves = 0;
         public double budget_T1 = 0;
         public bool actualbatch = true; //true for batch with real data, false for pure forecast
+        internal dictclass appldict = null;
+        public double progstud = 0; //students in course that come from programs.
 
         public programbatchclass cloneactual() //only clone batches with real data, not forecast 
         {
@@ -83,7 +85,7 @@ namespace ProgramPrognos
         public void extrapolate(transitionclass[] transition, transitionclass[] examtransition)
         {
             int k = lastrealsemester();
-            while (transition[k] != null)
+            while (k >= 0 && transition[k] != null)
             {
                 forecastsemstud[k + 1] = transition[k].nextnum(getstud(k), true, true);
                 k++;
@@ -96,7 +98,7 @@ namespace ProgramPrognos
             int k = maxsem;
             do
                 k--;
-            while (k >= 0 && actualsemstud[k] == null);
+            while (k > 0 && actualsemstud[k] == null);
             return k;
         }
 
@@ -118,6 +120,12 @@ namespace ProgramPrognos
                 return (double)forecastsemstud[sem];
             else
                 return 0;
+        }
+
+        public void setstud(double? stud,int sem)
+        {
+            if (sem < actualsemstud.Length)
+                actualsemstud[sem] = stud;
         }
 
         public double getstud(string sem) //kalendertermin; sem = "VT21" etc.

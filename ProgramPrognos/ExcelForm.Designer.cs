@@ -68,7 +68,7 @@ namespace ProgramPrognos
             this.TBlastsem.Name = "TBlastsem";
             this.TBlastsem.Size = new System.Drawing.Size(56, 20);
             this.TBlastsem.TabIndex = 2;
-            this.TBlastsem.Text = "VT23";
+            this.TBlastsem.Text = "VT24";
             // 
             // label1
             // 

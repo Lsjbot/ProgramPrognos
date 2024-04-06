@@ -39,8 +39,12 @@ namespace ProgramPrognos
 
         public static Dictionary<string, double> lokal_ers_hst = new Dictionary<string, double>();
         public static Dictionary<string, double> lokal_ers_hpr = new Dictionary<string, double>();
-
+        public static Dictionary<int, double> pengindex = new Dictionary<int, double>();
+        public static int reference_year = 2023;
         public int endyear = -1;
+
+        public static List<string> utbomrlist = new List<string>();
+        public static Dictionary<string, string> utbomrdict = new Dictionary<string, string>();
 
         public Dictionary<string, Dictionary<string, double>> plannedstudents = new Dictionary<string, Dictionary<string, double>>();
         public Form1()
@@ -93,34 +97,91 @@ namespace ProgramPrognos
 
             fill_subjinstdict();
 
-            read_studentpeng();
+            read_studentpeng(reference_year);
         }
 
-        public void read_studentpeng()
+        public void read_studentpeng(int refyear)
         {
             int n = 0;
-            string fn = folder + "\\ers_belopp_lokala 2021.txt";
-            using (StreamReader sr = new StreamReader(fn))
+            int year = DateTime.Now.Year -5;
+
+            //Från budgetpropp 2024:
+            pengindex.Add(2025, 1.073);
+            pengindex.Add(2026, 1.097);
+
+            string fn = folder + "\\ers_belopp_lokala YYYY.txt";
+
+            Dictionary<int, double> sumpeng = new Dictionary<int, double>();
+
+            do
             {
-                sr.ReadLine();
-                sr.ReadLine();
-                sr.ReadLine();
-                while (!sr.EndOfStream)
+                year++;
+                string fnyear = fn.Replace("YYYY", year.ToString());
+                if (!File.Exists(fnyear))
+                    continue;
+                using (StreamReader sr = new StreamReader(fnyear))
                 {
-                    string line = sr.ReadLine();
-                    string[] words = line.Split('\t');
-                    string area = words[0].Substring(words[0].IndexOf('(') + 1, 2);
-                    double hstpeng = util.tryconvertdouble(words[1].Replace(" ", ""));
-                    double hprpeng = util.tryconvertdouble(words[2].Replace(" ", ""));
-                    memo(area + "\t" + hstpeng + "\t" + hprpeng);
-                    lokal_ers_hst.Add(area, hstpeng);
-                    lokal_ers_hpr.Add(area, hprpeng);
-                    n++;
+                    sr.ReadLine();
+                    sr.ReadLine();
+                    sr.ReadLine();
+                    sumpeng.Add(year, 0);
+                    while (!sr.EndOfStream)
+                    {
+                        string line = sr.ReadLine();
+                        string[] words = line.Split('\t');
+                        string area = words[0].Substring(words[0].IndexOf('(') + 1, 2);
+                        double hstpeng = util.tryconvertdouble(words[1].Replace(" ", ""));
+                        double hprpeng = util.tryconvertdouble(words[2].Replace(" ", ""));
+                        sumpeng[year] += hstpeng + hprpeng;
+                        if (year == refyear)
+                        {
+                            memo(area + "\t" + hstpeng + "\t" + hprpeng);
+                            lokal_ers_hst.Add(area, hstpeng);
+                            lokal_ers_hpr.Add(area, hprpeng);
+                        }
+                        n++;
+                    }
                 }
+                //memo(n + " utbildningsområden i read_studentpeng");
+                memo("Lokala ersättningsbelopp läst från " + fnyear);
+            }
+            while (year < DateTime.Now.Year + 2);
+
+            foreach (int yr in sumpeng.Keys)
+            {
+                pengindex.Add(yr, sumpeng[yr] / sumpeng[refyear]);
             }
 
-            memo(n + " utbildningsområden i readstudentpeng");
+            utbomrdict.Add("FK Humanistiska området", "HU");
+            utbomrdict.Add("FK Idrottsliga området", "ID");
+            utbomrdict.Add("FK Juridiska området", "JU");
+            utbomrdict.Add("FK Mediaområdet", "MM");
+            utbomrdict.Add("FK Medicinska området", "ME");
+            utbomrdict.Add("FK Naturvetenskapliga området", "NA");
+            utbomrdict.Add("FK Samhällsvetenskapliga området", "SA");
+            utbomrdict.Add("FK Tekniska området", "TE");
+            utbomrdict.Add("FK Tekniska området (från mediaområdet)", "TE");
+            utbomrdict.Add("FK Undervisningsområdet", "LU");
+            utbomrdict.Add("FK Vårdområdet", "VÅ");
+            utbomrdict.Add("FK Övriga områden", "ÖV");
 
+        }
+
+        public static double get_pengindex(int year)
+        {
+            if (year < 2000)
+                return get_pengindex(2000 + year);
+
+            if (pengindex.ContainsKey(year))
+                return pengindex[year];
+
+            if (year > pengindex.Keys.Max())
+                return pengindex[pengindex.Keys.Max()];
+
+            if (year < pengindex.Keys.Min())
+                return pengindex[pengindex.Keys.Min()];
+
+            return pengindex[reference_year];
         }
 
         public void fill_subjinstdict()
@@ -516,6 +577,15 @@ namespace ProgramPrognos
             }
             while (!File.Exists(fnyear));
 
+            if (year != reference_year)
+            {
+                memo("=====================================================");
+                memo("Fel reference_year! Fixa i Form1 header");
+                memo("så att det blir samma som 'prod per inst och prog'");
+                memo("=====================================================");
+                Console.ReadLine();
+            }
+
             programclass.prodyear = year;
             read_prod(fnyear);
 
@@ -524,8 +594,8 @@ namespace ProgramPrognos
             {
                 origprogramdict[p].normalize_per_student();
                 memo(p + "\t" + origprogramdict[p].prod_per_student.frachst.ToString("N1") + " hst per stud");
-                if (p == "Produktionstekniker 120 hp")
-                    origprogramdict[p].fracproddict = origprogramdict["Energiteknikerprogrammet"].fracproddict;
+                //if (p == "Produktionstekniker 120 hp")
+                //    origprogramdict[p].fracproddict = origprogramdict["Energiteknikerprogrammet"].fracproddict;
                 origprogramdict[p].set_homeinst();
             }
 
@@ -1382,6 +1452,12 @@ namespace ProgramPrognos
             return "";
         }
 
+        public static programclass findprogrambyname(string name)
+        {
+            var q = from c in origprogramdict.Values where c.name.ToLower() == name.ToLower() select c;
+            return q.FirstOrDefault();
+        }
+
         public static programclass findprogram(string code)
         {
             string c2 = code;
@@ -1649,14 +1725,14 @@ namespace ProgramPrognos
                         }
                         //public programbatchclass(double?[] actualstud, int prog, string bstart, int exam, int appl, int res) //real data
                         double?[] actualstud = new double?[2];
-                        actualstud[0] = util.tryconvert(words[acceptcol]);
-                        actualstud[1] = util.tryconvert(words[regcol]);
+                        actualstud[0] = util.tryconvert0(words[acceptcol]);
+                        actualstud[1] = util.tryconvert0(words[regcol]);
                         double?[] applvec = new double?[4] { null, null, null, null };
-                        applvec[0] = util.tryconvert(words[applcol]);
+                        applvec[0] = util.tryconvert0(words[applcol]);
                         if (u1col > 0)
                         {
-                            applvec[1] = util.tryconvert(words[u1col]);
-                            applvec[2] = util.tryconvert(words[u2col]);
+                            applvec[1] = util.tryconvert0(words[u1col]);
+                            applvec[2] = util.tryconvert0(words[u2col]);
                         }
                         applvec[3] = actualstud[0];
                         programbatchclass kt = new programbatchclass(actualstud, -1, util.semester3to2(words[semcol]), util.tryconvert(words[examcol]), applvec, 0);
@@ -2348,7 +2424,8 @@ namespace ProgramPrognos
                 }
                 dict.Add(s4[0], frac);
 
-                
+                if (!utbomrlist.Contains(s4[0]))
+                    utbomrlist.Add(s4[0]);
             }
             return dict;
         }
@@ -2442,6 +2519,7 @@ namespace ProgramPrognos
             fk_transitions_parts();
             do_hst_hpr();
             normalize_pccoursedict();
+            read_kurspaketregistrering("VT22"); //reads from VT22 onwards as long as there is data
         }
 
         string parenrex = @"\((.*)\)";
@@ -2705,7 +2783,54 @@ namespace ProgramPrognos
             //}
         }
 
-        private void Retentionbutton_Click(object sender, EventArgs e)
+        private void read_kurspaketregistrering(string startsem)
+        {
+            string fnbase = folder + "\\kurspaketregistrering ";
+            string sem = startsem;
+            string endstring = " Total";
+            while (File.Exists(fnbase+sem+".txt"))
+            {
+                using (StreamReader sr = new StreamReader(fnbase + sem + ".txt"))
+                {
+                    memo("Reading " + fnbase + sem + ".txt");
+                    while (!sr.EndOfStream)
+                    {
+                        string line = sr.ReadLine();
+                        string[] words = line.Split('\t');
+                        if (words[0].EndsWith(endstring) && words.Length > 2)
+                        {
+                            string name = words[0].Replace(endstring, "").Trim();
+                            var tup = util.extract_hp(name);
+                            name = tup.Item1;
+                            programclass paket = findprogrambyname(name);
+                            if (paket != null)
+                            {
+                                int reg = util.tryconvert0(words[2]);
+                                memo(name + "\t" + sem + "\t" + reg);
+                                programbatchclass pb = paket.getbatch(sem);
+                                if (pb == null)
+                                {
+                                    double?[] actualstud = new double?[] { null, reg };
+                                    pb = new programbatchclass(actualstud, paket.id, sem);
+                                    paket.batchlist.Add(pb);
+                                }
+                                else
+                                {
+                                    pb.setstud(reg, 1);
+                                }
+                            }
+                            else
+                            {
+                                memo(name + " not found");
+                            }
+                        }
+                    }
+                }
+                sem = util.incrementsemester(sem);
+            }
+        }
+
+        private void retention_by_institution()
         {
             int startyear = 21;
             int endyear = 23;
@@ -2721,7 +2846,7 @@ namespace ProgramPrognos
                 var q = from c in origprogramdict.Values
                         where c.homeinst == inst
                         select c;
-                for (int year=startyear;year<=endyear;year++)
+                for (int year = startyear; year <= endyear; year++)
                 {
                     double t1stud = 0;
                     double t2stud = 0;
@@ -2743,7 +2868,7 @@ namespace ProgramPrognos
                         }
                         //memo("\t"+pc.name + "\t"+year+"\t" + t1stud + "\t" + t2stud);
                     }
-                    sb.Append("\t" + (100 * t2stud / t1stud).ToString("F1")+" %");
+                    sb.Append("\t" + (100 * t2stud / t1stud).ToString("F1") + " %");
                     t1[year - startyear] += t1stud;
                     t2[year - startyear] += t2stud;
 
@@ -2753,8 +2878,49 @@ namespace ProgramPrognos
             }
             StringBuilder sbhda = new StringBuilder("HDa");
             for (int year = startyear; year <= endyear; year++)
-                sbhda.Append("\t" + (100 * t2[year-startyear] / t1[year-startyear]).ToString("F1") + " %");
+                sbhda.Append("\t" + (100 * t2[year - startyear] / t1[year - startyear]).ToString("F1") + " %");
             memo(sbhda.ToString());
+
+        }
+
+        private void appl_to_T3()
+        {
+            double sumappl = 0;
+            double sumT3 = 0;
+
+            memo("Program\tSökande\tT3-stud\tSökande/T3");
+
+            foreach (programclass pc in origprogramdict.Values)
+            {
+                double sumprogappl = 0;
+                double sumprogT3 = 0;
+                foreach (programbatchclass pb in pc.batchlist)
+                {
+                    if (pb.applicants != null && pb.applicants[0] != null)
+                    {
+                        if (pb.applicants[0] > 0 && pb.reserves == 0)
+                        {
+                            if (pb.getactualstud(3) != null && pb.getactualstud(3) > 0)
+                            {
+                                sumprogappl += (double)pb.applicants[0];
+                                sumprogT3 += (double)pb.getactualstud(3);
+                            }
+                        }
+                    }
+                    sumappl += sumprogappl;
+                    sumT3 += sumprogT3;
+                }
+                if (sumprogT3 > 0)
+                    memo(pc.name + "\t" + sumprogappl + "\t" + sumprogT3 + "\t" + sumprogappl / sumprogT3);
+            }
+            memo("");
+            memo("Totalt\t" + sumappl + "\t" + sumT3 + "\t" + sumappl / sumT3);
+        }
+
+        private void Retentionbutton_Click(object sender, EventArgs e)
+        {
+            retention_by_institution();
+            appl_to_T3();
         }
 
         private void applicantbutton_Click(object sender, EventArgs e)
@@ -2887,7 +3053,7 @@ namespace ProgramPrognos
                 read_kurskostnad();
             }
 
-            memo("Namn\tHST\tIntäkt\tLärarkostnad\tTB\tInkl OH\t'Vinst'");
+            memo("Namn\tHST\tIntäkt\tLärarkostnad\tTB\tInkl OH\t'Vinst'\tKostnad T1\tT2\tT3\tT4\tT5\tT6");
             foreach (programclass pc in origprogramdict.Values)
             {
                 if (pc.courseincomedict.Count() == 0)
@@ -2896,26 +3062,49 @@ namespace ProgramPrognos
                 double sumhst = 0;
                 double sumincome = 0;
                 double sumcost = 0;
+                double[] semcost = new double[7] {0,0,0,0,0,0,0};
                 foreach (string code in pc.courseincomedict.Keys)
                 {
                     sumhst += pc.coursehstdict[code];
                     programclass course = findcourse(code);
                     if (course == null || course.coursehstdict.Count() == 0)
                     {
-                        //memo(code+" missing data");
+                        memo("\t"+code+" missing data");
                         continue;
                     }
                     string bestcode = course.bestcode();
                     double progfraction = course.courseincomedict[bestcode] > 0 ? pc.courseincomedict[bestcode] / course.courseincomedict[bestcode] : 0;
+                    double courseprogcost = progfraction * course.coursecostdict[bestcode];
                     sumincome += progfraction * course.courseincomedict[bestcode];
-                    sumcost += progfraction * course.coursecostdict[bestcode];
+                    sumcost += courseprogcost;
                     //memo("\t" + bestcode + "\t" + course.name + "\t" + progfraction + "\t" + course.courseincomedict[bestcode] + "\t" + course.coursecostdict[bestcode]
                     //    + "\t" + (course.courseincomedict[bestcode] - course.coursecostdict[bestcode]));
+                    double semsum = 0;
+                    for (int i=0;i<=6; i++)
+                    {
+                        if (pc.coursedict.ContainsKey(i) && pc.coursedict[i].ContainsKey(bestcode))
+                            semsum += pc.coursedict[i][bestcode];
+                    }
+                    if (semsum > 0)
+                    {
+                        for (int i = 0; i <= 6; i++)
+                        {
+                            if (pc.coursedict.ContainsKey(i) && pc.coursedict[i].ContainsKey(bestcode))
+                                semcost[i] += courseprogcost*pc.coursedict[i][bestcode]/semsum;
+                        }
+                    }
                 }
                 double tb = sumincome - sumcost;
                 double costplusoh = 1.6 * sumcost;
                 double profit = sumincome - costplusoh;
                 sb.Append("\t" + sumhst + "\t" + sumincome + "\t" + sumcost + "\t" + tb+"\t"+costplusoh+"\t"+profit);
+                for (int i = 1; i <= 6; i++)
+                {
+                    if (Math.Abs(semcost[i]) > 1000)
+                        sb.Append("\t" + semcost[i]);
+                    else
+                        sb.Append("\t");
+                }
                 memo(sb.ToString());
 
             }
@@ -3047,6 +3236,290 @@ namespace ProgramPrognos
                 memo("#programs not found: " + nprognotfound);
 
             }
+        }
+
+        private void read_applicants()
+        {
+            openFileDialog1.Title = "Select anmälningar file";
+            openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                string fn = openFileDialog1.FileName;
+                memo("Reading applicant data from " + fn);
+
+                using (StreamReader sr = new StreamReader(fn))
+                {
+                    sr.ReadLine(); //throw away headerlines
+                    string year = sr.ReadLine().Substring(7,2);
+                    sr.ReadLine();
+
+                    string hline = sr.ReadLine();
+                    string[] hwords = hline.Split('\t');
+
+                    int nline = 0;
+                    int ngood = 0;
+
+                    while (!sr.EndOfStream)
+                    {
+                        string line = sr.ReadLine();
+                        string[] words = line.Split('\t');
+                        nline++;
+                        if (words.Length < 4)
+                            continue;
+                        string code = words[1];
+                        if (string.IsNullOrEmpty(code))
+                            continue;
+                        string coursename = words[0].Replace(code, "").Trim();
+                        double hp = -1;
+                        if (coursename.Contains("hp"))
+                        {
+                            var hpresult = util.extract_hp(coursename);
+                            coursename = hpresult.Item1;
+                            hp = hpresult.Item2;
+                        }
+                        programclass course = findcourse(code);
+                        if (course == null)
+                        {
+                            course = findcourse(coursename);
+                        }
+                        if (course == null)
+                            continue;
+
+                        string sem = words[0].Contains("(V") ? "VT" : "HT";
+                        sem += year;
+                        programbatchclass pb = course.getbatch(sem);
+                        if (pb == null)
+                            continue;
+                        pb.appldict = new dictclass(hwords, words);
+                        ngood++;
+                    }
+                    memo("Lines: " + nline);
+                    memo("Good:  " + ngood);
+                }
+
+            }
+
+        }
+
+        private void fill_fk_progstud(string sem)
+        {
+            foreach (programclass pc in origprogramdict.Values)
+            {
+                foreach (programbatchclass pb in pc.batchlist)
+                {
+                    double nstud = pb.getstud(sem);
+                    int tx = util.semestercount(pb.batchstart, sem);
+                    if (pc.coursedict.ContainsKey(tx))
+                    {
+                        foreach (string code in pc.coursedict[tx].Keys)
+                        {
+                            programclass course = findcourse(code);
+                            if (code == null)
+                                continue;
+                            var pbx = (from c in course.batchlist where c.batchstart == sem select c).FirstOrDefault();
+                            if (pbx == null)
+                                continue;
+                            pbx.progstud += nstud * pc.coursedict[tx][code];
+                        }
+                    }
+                }
+            }
+        }
+
+        private void button1_Click_1(object sender, EventArgs e)
+        {
+            string yearstring = "23";
+            var q = from c in origprogramdict.Values where c.courseincomedict.Count() > 0 select c;
+            if (q.Count() == 0)
+            {
+                //read_lokal_ers_programkurser();
+                read_kurskostnad();
+                read_applicants();
+                fill_fk_progstud("VT"+yearstring);
+                fill_fk_progstud("HT"+yearstring);
+            }
+
+            int ncell1 = 4;
+            int ncelltot = 4;
+            int[,] coursecount = new int[ncell1, ncelltot];
+            double[,] withprofit = new double[ncell1, ncelltot];
+            double[,] profitsum = new double[ncell1, ncelltot];
+            double[,] incomesum = new double[ncell1, ncelltot];
+            double[,] hstsum = new double[ncell1, ncelltot];
+
+
+
+            int low1 = 10;
+            int pitch1 = 10;
+            int lowtot = 50;
+            int pitchtot = 25;
+
+            string s1 = "Antal behöriga sökande 1a-hand";
+            string stot = "Antal sökande totalt";
+
+            foreach (programclass course in fkdict.Values)
+            {
+                if (course.courseincomedict.Count == 0)
+                    continue;
+                string bestcode = course.bestcode();
+                double income = course.courseincomedict[bestcode];
+                double profit = income - 1.6 * course.coursecostdict[bestcode];
+                foreach (programbatchclass pb in course.batchlist)
+                {
+                    if (!pb.batchstart.Contains(yearstring))
+                        continue;
+                    if (pb.appldict == null)
+                        continue;
+                    if (pb.progstud > 0.5 * pb.getstud(1))
+                        continue;
+                    int n1 = pb.appldict.Getint(s1);
+                    int ntot = pb.appldict.Getint(stot);
+                    int i1 = 0;
+                    if (n1 > low1)
+                    {
+                        i1 = 1 + (n1 - low1) / pitch1;
+                        if (i1 >= ncell1)
+                            i1 = ncell1 - 1;
+                    }
+                    int itot = 0;
+                    if (ntot > lowtot)
+                    {
+                        itot = 1 + (ntot - lowtot) / pitchtot;
+                        if (itot >= ncelltot)
+                            itot = ncelltot - 1;
+                    }
+                    coursecount[i1, itot]++;
+                    if (profit>0)
+                        withprofit[i1,itot]++;
+                    if (course.hp > 0)
+                        hstsum[i1, itot] += pb.getstud(1) * course.hp / 60;
+                    incomesum[i1, itot] += income;
+                    profitsum[i1, itot] += profit;
+                    break;
+                }
+
+            }
+            StringBuilder sb1 = new StringBuilder();
+            int k = low1;
+            do
+            {
+                sb1.Append("\t" + k);
+                k += pitch1;
+            }
+            while (k <= low1 + ncell1 * pitch1);
+            memo(sb1.ToString());
+
+            int ktot = lowtot;
+            int j = 0;
+            StringBuilder sb = new StringBuilder();
+            do
+            {
+                sb = new StringBuilder(ktot.ToString());
+                for (int i=0; i<ncell1; i++)
+                {
+                    if (coursecount[i, j] > 0)
+                        sb.Append("\t" + (withprofit[i, j] / coursecount[i, j]).ToString());
+                    else
+                        sb.Append("\t");
+                }
+                memo(sb.ToString());
+                ktot += pitchtot;
+                j += 1;
+            }
+            while (j < ncelltot);
+
+            memo("");
+            memo("");
+            memo(sb1.ToString());
+
+            sb = new StringBuilder();
+            ktot = lowtot;
+            j = 0;
+            do
+            {
+                sb = new StringBuilder(ktot.ToString());
+                for (int i = 0; i < ncell1; i++)
+                {
+                    if (coursecount[i, j] > 0)
+                        sb.Append("\t" + (profitsum[i, j] / coursecount[i, j]).ToString());
+                    else
+                        sb.Append("\t");
+                }
+                memo(sb.ToString());
+                ktot += pitchtot;
+                j += 1;
+            }
+            while (j < ncelltot);
+
+            memo("");
+            memo("Antal kurser per cell");
+            memo(sb1.ToString());
+
+            sb = new StringBuilder();
+            ktot = lowtot;
+            j = 0;
+            do
+            {
+                sb = new StringBuilder(ktot.ToString());
+                for (int i = 0; i < ncell1; i++)
+                {
+                    if (coursecount[i, j] > 0)
+                        sb.Append("\t" + coursecount[i, j].ToString());
+                    else
+                        sb.Append("\t");
+                }
+                memo(sb.ToString());
+                ktot += pitchtot;
+                j += 1;
+            }
+            while (j < ncelltot);
+
+            memo("");
+            memo("Total intäkt per cell");
+            memo(sb1.ToString());
+
+            sb = new StringBuilder();
+            ktot = lowtot;
+            j = 0;
+            do
+            {
+                sb = new StringBuilder(ktot.ToString());
+                for (int i = 0; i < ncell1; i++)
+                {
+                    if (coursecount[i, j] > 0)
+                        sb.Append("\t" + incomesum[i, j].ToString());
+                    else
+                        sb.Append("\t");
+                }
+                memo(sb.ToString());
+                ktot += pitchtot;
+                j += 1;
+            }
+            while (j < ncelltot);
+
+            memo("");
+            memo("HST per cell");
+            memo(sb1.ToString());
+
+            sb = new StringBuilder();
+            ktot = lowtot;
+            j = 0;
+            do
+            {
+                sb = new StringBuilder(ktot.ToString());
+                for (int i = 0; i < ncell1; i++)
+                {
+                    if (coursecount[i, j] > 0)
+                        sb.Append("\t" + hstsum[i, j].ToString());
+                    else
+                        sb.Append("\t");
+                }
+                memo(sb.ToString());
+                ktot += pitchtot;
+                j += 1;
+            }
+            while (j < ncelltot);
+
         }
     }
 }

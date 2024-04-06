@@ -19,6 +19,7 @@ namespace ProgramPrognos
 
         Dictionary<string, CheckBox> CBinst = new Dictionary<string, CheckBox>();
 
+        bool prognos; 
 
         public ExcelForm()
         {
@@ -396,9 +397,10 @@ namespace ProgramPrognos
             sheet.Rows[2].Font.Bold = true;
             for (int icol = 2; icol <= planhd.Count; icol++)
             {
-                sheet.Cells[2, icol].Formula = "=SUM(" + Cellname(3, icol) + ":" + Cellname(3 + qprog.Count, icol) + ")";
+                sheet.Cells[2, icol].Formula = "=SUM(" + Cellname(3, icol) + ":" + Cellname(3 + qprog.Count+1, icol) + ")";
             }
 
+            sheet.Range["A1", Cellname(1,planhd.Count)].WrapText = true;
 
 
 
@@ -423,6 +425,8 @@ namespace ProgramPrognos
                     double hprpeng = pc.fracproddict[inst].hprpeng;
                     if (hprpeng == 0)
                         hprpeng = qprog.First().fracproddict[inst].hprpeng;
+                    hstpeng *= Form1.get_pengindex(year);
+                    hprpeng *= Form1.get_pengindex(year);
                     if (pc.fk)
                     {
                         int colvt = planhd[t1string + "VT" + year] + 1;
@@ -451,13 +455,14 @@ namespace ProgramPrognos
                     if (pc.fk)
                     {
                         //double hst = pc.totalprod.frachst;
-                        double hst = pc.fracproddict[inst].frachst*pc.totalprod.frachst;
-                        if (hst > 0)
-                        {
-                            sheet.Cells[row, col] = roundfactor * Math.Round(0.5 * hst / roundfactor);
-                            phtstart[pc.name] = true;
-                            pvtstart[pc.name] = true;
-                        }
+                        //double hst = pc.fracproddict[inst].frachst*pc.totalprod.frachst;
+                        string uo = Form1.utbomrdict[pc.name];
+                        int year = util.yearfromsem(sem);
+                        string hd = hststring + fkstring + uo + " " + year;
+                        string f = toreplace + "=0,5*'" + coursesheetname + "'!" + Cellname(2, coursehd[hd]+1);
+                        sheet.Cells[row, col].Formula = f;
+                        phtstart[pc.name] = true;
+                        pvtstart[pc.name] = true;
                     }
                     else
                     {
@@ -478,8 +483,8 @@ namespace ProgramPrognos
             }
             //sheet.Range["B2", Cellname(qprog.Count + 1, allmaxsem + 2)].NumberFormat = "###.0%";
             //sheet.Cells[1, 1].Locked = false;
-            sheet.Range["B2", Cellname(qprog.Count + 6, 6)].NumberFormat = "### ### ###";
-            sheet.Range["B2", Cellname(qprog.Count + 2, 6)].Interior.Color = Excel.XlRgbColor.rgbLightPink;
+            sheet.Range["B2", Cellname(qprog.Count + 7, 6)].NumberFormat = "### ### ###";
+            sheet.Range["B2", Cellname(qprog.Count + 3, 6)].Interior.Color = Excel.XlRgbColor.rgbLightPink;
             for (int i = 2; i < 7; i++)
             {
                 Excel.Range qa = sheet.Columns[i];
@@ -920,11 +925,15 @@ namespace ProgramPrognos
             if (!rrow.ContainsKey(sheet.Name))
                 rrow.Add(sheet.Name, ProgramNames(sheet, qprog, progoffset));
 
-            sheet.Cells[progendrow + 2, 1].Value = "Summa FK från fliken 'Kurser'";
-            sheet.Cells[progendrow + 3, 1].Value = "Summa kurspaket från fliken 'Kurspaket'";
-            sheet.Cells[progendrow + 4, 1].Value = "'-- Nedanstående två rader ska bli samma summa --";
-            sheet.Cells[progendrow + 5, 1].Value = "Summa FK+kurspaket från flikar";
-            sheet.Cells[progendrow + 6, 1].Value = "Summa FK i rosa fält ovan";
+            int paketrow = 1;
+            int instructionrow = 3;
+            int kursfromflikrow = 4;
+            int kursfrompinkrow = 5;
+            sheet.Cells[progendrow + paketrow, 1].Value = "Summa kurspaket från fliken 'Kurspaket'";
+            sheet.Cells[progendrow + kursfromflikrow, 1].Value = "Summa FK från fliken 'Kurser'";
+            sheet.Cells[progendrow + instructionrow, 1].Value = "'-- Nedanstående två rader ska bli samma summa --";
+            //sheet.Cells[progendrow + 5, 1].Value = "Summa FK+kurspaket från flikar";
+            sheet.Cells[progendrow + kursfrompinkrow, 1].Value = "Summa FK i rosa fält ovan";
 
             for (int year = startyear; year <= endyear; year++)
             {
@@ -932,13 +941,13 @@ namespace ProgramPrognos
                 int coursecolyear = coursehd[moneystring + fkstring + "20" + year] + 1;
 
                 int fsrow = totalrow;
-                if (inst != Form1.hda)
+                if (inst != Form1.hda & prognos)
                     fsrow = fksumrow[inst];
-                sheet.Cells[progendrow + 2, colyear].Formula = toreplace + "='" + coursesheetname + "'!" + Cellname(fsrow, coursecolyear);
-                if (inst == Form1.hda)
-                    sheet.Cells[progendrow + 3, colyear].Formula = toreplace + "='" + paketsheetname + "'!" + Cellname(totalrow, colyear);
+                sheet.Cells[progendrow + kursfromflikrow, colyear].Formula = toreplace + "='" + coursesheetname + "'!" + Cellname(fsrow, coursecolyear);
+                if (inst == Form1.hda || !prognos)
+                    sheet.Cells[progendrow + paketrow, colyear].Formula = toreplace + "='" + paketsheetname + "'!" + Cellname(totalrow, colyear);
 
-                sheet.Cells[progendrow + 5, colyear].Formula = toreplace + "="+Cellname(progendrow+2,colyear)+"+"+Cellname(progendrow+3,colyear);
+                //sheet.Cells[progendrow + 5, colyear].Formula = toreplace + "="+Cellname(progendrow+2,colyear)+"+"+Cellname(progendrow+3,colyear);
                 string fklines = toreplace + "=";
                 foreach (programclass pc in qprog)
                 {
@@ -948,7 +957,7 @@ namespace ProgramPrognos
                     }
                 }
                 fklines = fklines.Trim('+');
-                sheet.Cells[progendrow + 6, colyear].Formula = fklines;
+                sheet.Cells[progendrow + kursfrompinkrow, colyear].Formula = fklines;
 
             }
 
@@ -991,8 +1000,8 @@ namespace ProgramPrognos
                     int colyear = planhd[moneystring + "20" + year] + 1;
                     string firstcourse = pc.coursedict[1].Keys.First();
                     programclass cc = Form1.fkcodedict[firstcourse];
-                    double hstpeng = Form1.hstkr(1, cc.studentpengarea);
-                    double hprpeng = Form1.hprkr(1, cc.studentpengarea);
+                    double hstpeng = Form1.hstkr(1, cc.studentpengarea) * Form1.get_pengindex(year);
+                    double hprpeng = Form1.hprkr(1, cc.studentpengarea) * Form1.get_pengindex(year);
                     //double hstpeng = pc.fracproddict[inst].hstpeng;
                     //if (hstpeng == 0)
                     //    hstpeng = qprog.First().fracproddict[inst].hstpeng;
@@ -1002,9 +1011,19 @@ namespace ProgramPrognos
                     //if (pc.fk)
                     //{
                     double hstperstud = pc.hp / 60;
-                    int colvt = planhd[t1string + "VT" + year] + 1;
-                        int colht = planhd[t1string + "HT" + year] + 1;
-                        sheet.Cells[row, colyear].Formula = toreplace + "=" + (hstpeng + pc.totalprod.prestationsgrad() * hprpeng) + "*"+hstperstud + "*(" + Cellname(row, colvt) + "+" + Cellname(row, colht) + ")";
+                    string vtsem = "VT" + year;
+                    string htsem = "HT" + year;
+                    int colvt = planhd[t1string + vtsem] + 1;
+                    int colht = planhd[t1string + htsem] + 1;
+                    if (pc.getbatch(vtsem) != null && pc.getbatch(vtsem).getactualstud(1) > 0)
+                    {
+                        sheet.Cells[row, colvt].Value = pc.getbatch(vtsem).getactualstud(1);
+                    }
+                    if (pc.getbatch(htsem) != null && pc.getbatch(htsem).getactualstud(1) > 0)
+                    {
+                        sheet.Cells[row, colht].Value = pc.getbatch(htsem).getactualstud(1);
+                    }
+                    sheet.Cells[row, colyear].Formula = toreplace + "=" + (hstpeng + pc.totalprod.prestationsgrad() * hprpeng) + "*"+hstperstud + "*(" + Cellname(row, colvt) + "+" + Cellname(row, colht) + ")";
                     //}
                     //else
                     //{
@@ -1503,27 +1522,29 @@ namespace ProgramPrognos
 
         }
 
-        private void CourseSheet(Excel.Worksheet coursesheet, List<programclass> qprog, List<programclass> qpaket, List<programclass> qcourse, string startsem, string endsem)
+        private void fill_coursehd(Excel.Worksheet coursesheet, List<programclass> qprog, List<programclass> qpaket, List<programclass> qcourse, string startsem, string endsem)
         {
             int hpcol = 2;
             int codecol = 3;
             int prestcol = 5;
             int moneycol = 6;
+
             int totalrow = 2;
 
-            coursehd = new Dictionary<string, int>() { 
-                { "Kurs", 0 }, 
+            int startyear = 2000 + util.semtoint(startsem);
+            int endyear = 2000 + util.semtoint(endsem);
+
+            coursehd = new Dictionary<string, int>() {
+                { "Kurs", 0 },
                 { "Hp", hpcol-1 },
                 { "Kurskod", codecol-1 },
                 { "Ämneskod", codecol },
-                { prestationstring, prestcol-1 }, 
+                { prestationstring, prestcol-1 },
                 { "Kr/HST", moneycol-1 } };
 
             List<string> semlist = new List<string>();
             int col = coursehd.Count;
 
-            int startyear = 2000 + util.semtoint(startsem);
-            int endyear = 2000 + util.semtoint(endsem);
 
             for (int i = startyear; i <= endyear; i++)
             {
@@ -1651,6 +1672,45 @@ namespace ProgramPrognos
                 col++;
             }
 
+            for (int i = startyear; i <= endyear; i++)
+            {
+                foreach (string uo in Form1.utbomrlist)
+                {
+                    coursehd.Add(hststring + fkstring + uo + " " + i, col);
+                    col++;
+                }
+            }
+
+
+        }
+
+        private void CourseSheet(Excel.Worksheet coursesheet, List<programclass> qprog, List<programclass> qpaket, List<programclass> qcourse, string startsem, string endsem)
+        {
+            int hpcol = 2;
+            int codecol = 3;
+            int prestcol = 5;
+            int moneycol = 6;
+
+            int totalrow = 2;
+
+            int startyear = 2000 + util.semtoint(startsem);
+            int endyear = 2000 + util.semtoint(endsem);
+
+            int col = coursehd.Count;
+
+            fksumrow = new Dictionary<string, int>();
+
+            string sem = startsem;
+            List<string> semlist = new List<string>();
+
+            do
+            {
+                semlist.Add(sem);
+                sem = util.incrementsemester(sem);
+            }
+            while (sem != util.incrementsemester(endsem));
+
+
             //for (int i = 1; i < allmaxsem; i++)
             //{
             //    rethd.Add("T" + i + "->T" + (i + 1), 2 + i);
@@ -1707,9 +1767,10 @@ namespace ProgramPrognos
                 int nrow = rrow[coursesheet.Name][pc.name];
                 if (!nykurs)
                 {
-                    coursesheet.Cells[nrow, hpcol].Value = pc.hp;
+                    coursesheet.Cells[nrow, hpcol].Value = pc.hp < 0 ? 7.5 : pc.hp;
                     if (pc.hp <= 0)
                     {
+                        coursesheet.Cells[nrow, hpcol].Borders.Color = Color.Red;
                         string sp = "";
                         if (pc.studentpengarea.Count > 0)
                         {
@@ -1899,8 +1960,8 @@ namespace ProgramPrognos
                     }
                     else
                     {
-                        f += Form1.hstkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")+";
-                        f += Form1.hprkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hprvtcol) + "+" + Cellname(nrow, hprhtcol) + ")";
+                        f += (Form1.hstkr(1, pc.studentpengarea) * Form1.get_pengindex(i)) + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")+";
+                        f += (Form1.hprkr(1, pc.studentpengarea) * Form1.get_pengindex(i)) + "*(" + Cellname(nrow, hprvtcol) + "+" + Cellname(nrow, hprhtcol) + ")";
                     }
                     coursesheet.Cells[nrow, ncol].Formula = f;
 
@@ -1917,8 +1978,8 @@ namespace ProgramPrognos
                     int hprvtcol = coursehd[hprstring + progstring + vtsem] + 1;
                     int hprhtcol = coursehd[hprstring + progstring + htsem] + 1;
                     string f = toreplace + "=";
-                    f += Form1.hstkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")+";
-                    f += Form1.hprkr(1, pc.studentpengarea) + "*(" + Cellname(nrow, hprvtcol) + "+" + Cellname(nrow, hprhtcol) + ")";
+                    f += (Form1.hstkr(1, pc.studentpengarea) * Form1.get_pengindex(i)) + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")+";
+                    f += (Form1.hprkr(1, pc.studentpengarea) * Form1.get_pengindex(i)) + "*(" + Cellname(nrow, hprvtcol) + "+" + Cellname(nrow, hprhtcol) + ")";
                     coursesheet.Cells[nrow, ncol].Formula = f;
 
                 }
@@ -1954,6 +2015,21 @@ namespace ProgramPrognos
                 if (nrow % 100 == 0)
                     memo(nrow.ToString());
 
+
+                for (int i = startyear; i <= endyear; i++)
+                {
+                    foreach (string uo in pc.studentpengarea.Keys)
+                    {
+                        string hd = hststring + fkstring + uo + " " + i;
+                        int ncol = coursehd[hd] + 1;
+                        string vtsem = "VT" + (i % 100);
+                        string htsem = "HT" + (i % 100);
+                        int hstvtcol = coursehd[hststring + fkstring + vtsem] + 1;
+                        int hsthtcol = coursehd[hststring + fkstring + htsem] + 1;
+                        coursesheet.Cells[nrow, ncol].Formula = toreplace + "=" + pc.studentpengarea[uo] + "*(" + Cellname(nrow, hstvtcol) + "+" + Cellname(nrow, hsthtcol) + ")";
+                    }
+                }
+
             }
             //sdfa
 
@@ -1965,9 +2041,47 @@ namespace ProgramPrognos
                 coursesheet.Cells[totalrow,icol].Formula = toreplace+"=SUM("+Cellname(totalrow+1,icol)+":"+Cellname(qcourse.Count+courseoffset,icol)+")";
             }
 
+
+            ////Testing if it works to just move it here from CoursesheetPrognos
+
+            //var qsubj = (from c in qcourse select c.subjectcode).Distinct();
+            //var qinst = (from c in qcourse select c.homeinst).Distinct();
+
+            //int srow = lastnewcourseline + 2;
+            //coursesheet.Cells[srow, 1] = "Summerat per ämne";
+            //string coderange = Cellname(totalrow + 1, codecol + 1) + ":" + Cellname(lastnewcourseline, codecol + 1);
+            //foreach (string subj in qsubj)
+            //{
+            //    srow++;
+            //    fksumrow.Add(subj, srow);
+            //    coursesheet.Cells[srow, instcol] = subj;
+            //    for (int i = moneycol + 1; i <= coursehd.Count; i++)
+            //        coursesheet.Cells[srow, i] = toreplace + "=SUMIF(" + coderange + ";" + Cellname(srow, instcol) + ";" + Cellname(totalrow + 1, i) + ":" + Cellname(lastnewcourseline, i) + ")";
+            //    coursesheet.Cells[srow, instcol + 1] = toreplace + "=" + Cellname(srow, instcol + 3) + "+" + Cellname(srow, instcol + 5);
+            //    coursesheet.Cells[srow, instcol + 2] = toreplace + "=" + Cellname(srow, instcol + 4) + "+" + Cellname(srow, instcol + 6);
+            //}
+
+            //srow++;
+            //coursesheet.Cells[srow, instcol] = "Summerat per institution";
+            //string instrange = Cellname(totalrow + 1, instcol) + ":" + Cellname(lastnewcourseline, instcol);
+            //foreach (string inst in qinst)
+            //{
+            //    srow++;
+            //    fksumrow.Add(inst, srow);
+            //    coursesheet.Cells[srow, instcol] = inst;
+            //    for (int i = moneycol + 1; i < coursehd.Count; i++)
+            //        coursesheet.Cells[srow, i] = toreplace + "=SUMIF(" + instrange + ";" + Cellname(srow, instcol) + ";" + Cellname(totalrow + 1, i) + ":" + Cellname(lastnewcourseline, i) + ")";
+            //    coursesheet.Cells[srow, instcol + 1] = toreplace + "=" + Cellname(srow, instcol + 3) + "+" + Cellname(srow, instcol + 5);
+            //    coursesheet.Cells[srow, instcol + 2] = toreplace + "=" + Cellname(srow, instcol + 4) + "+" + Cellname(srow, instcol + 6);
+            //}
+
+            ////End testing section
+
+
             coursesheet.Range["D3", Cellname(999, 4)].NumberFormat = "###.0%";
             coursesheet.Range["g3", "p999"].NumberFormat = "# ### ###";
             coursesheet.Range["g3", "p999"].ColumnWidth = 13;
+            coursesheet.Range["A1", "GD1"].WrapText = true;
             //coursesheet.Range["f3", "O999"].Interior.Color = Color.Pink;
             ////coursesheet.Range["z3", "ai999"].NumberFormat = "# ###.#";
             //coursesheet.Range["z3", "ai999"].Interior.Color = Color.Yellow;
@@ -2009,8 +2123,11 @@ namespace ProgramPrognos
                 }
             }
 
-            coursesheet.Range[Cellname(firstnewcourseline, 1), Cellname(lastnewcourseline, 3)].Interior.Color = Color.Yellow;
-            coursesheet.Range[Cellname(firstnewcourseline, 1), Cellname(lastnewcourseline, 3)].Locked = false;
+            if (firstnewcourseline > 0 && lastnewcourseline >= firstnewcourseline)
+            {
+                coursesheet.Range[Cellname(firstnewcourseline, 1), Cellname(lastnewcourseline, 3)].Interior.Color = Color.Yellow;
+                coursesheet.Range[Cellname(firstnewcourseline, 1), Cellname(lastnewcourseline, 3)].Locked = false;
+            }
 
         }
 
@@ -2697,6 +2814,7 @@ namespace ProgramPrognos
                         nrow++;
                     }
                 }
+                
                 if (batsem.Count > 0)
                 {
                     progbatsem.Add(pc.name, batsem);
@@ -2809,6 +2927,7 @@ namespace ProgramPrognos
 
         private void Excelbutton_Click(object sender, EventArgs e)
         {
+            prognos = false;
             lastsemwithdata = TBlastsem.Text;
             //Create COM Objects. Create a COM object for everything that is referenced
             Excel.Application xlApp = new Excel.Application();
@@ -2825,7 +2944,7 @@ namespace ProgramPrognos
 
             foreach (string inst in Form1.institutiondict.Keys)
             {
-                fninst.Add(inst, util.unusedfn(folder + "HST-planering " + Form1.instshortdict[inst] +" "+util.yymmdd()+ ".xlsx"));
+                fninst.Add(inst, util.unusedfn(folder + "HST-planering " + Form1.instshortdict[inst] +" "+util.yymmdd()+" "+DateTime.Now.ToString("hh.mm")+".xlsx"));
                 Excel.Workbook xl = xlApp.Workbooks.Add();
                 xldict.Add(inst, xl);
                 sheetdictdict.Add(inst, new Dictionary<string, Excel.Worksheet>());
@@ -2839,6 +2958,7 @@ namespace ProgramPrognos
 
             foreach (string inst in fninst.Keys)
             {
+                rrow.Clear();
                 memo(inst);
                 //if (inst != "Institutionen för information och teknik")
                 //    continue;
@@ -2952,6 +3072,13 @@ namespace ProgramPrognos
                            where c.Value.homeinst == inst 
                            select c.Value).OrderBy(c=>c.subjectcode).ThenBy(c=>c.name).ToList();
                 memo("# courses = " + qcourse.Count());
+                int newcourses = 20;
+                for (int i = 0; i < newcourses; i++)
+                {
+                    programclass nc = new programclass(newcoursename + (i + 1) + " (fyll i hp och FK-stud)");
+                    qcourse.Add(nc);
+                }
+                memo("# courses (with new) = " + qcourse.Count());
 
                 string startsem = "VT22";
                 string endsem = "HT26";
@@ -2964,6 +3091,11 @@ namespace ProgramPrognos
                 if (!rrow.ContainsKey(mainsheet.Name))
                     rrow.Add(mainsheet.Name, ProgramNames(mainsheet, qprog, progoffset));
 
+                Excel.Worksheet coursesheet = xldict[inst].Sheets.Add();
+                coursesheet.Name = coursesheetname;
+                memo(coursesheet.Name);
+                sheetdictdict[inst].Add(coursesheet.Name, coursesheet);
+
                 Excel.Worksheet retsheet = xldict[inst].Sheets.Add();
                 retsheet.Name = retsheetname;
                 memo(retsheet.Name);
@@ -2974,6 +3106,8 @@ namespace ProgramPrognos
                 detailsheet.Name = detailsheetname;
                 memo(detailsheet.Name);
                 sheetdictdict[inst].Add(detailsheet.Name, detailsheet);
+
+                fill_coursehd(coursesheet, qprog, qpaket, qcourse, startsem, endsem);
 
                 fill_planhd(mainsheet,detailsheet,qprog,startsem, endsem);
 
@@ -2996,8 +3130,6 @@ namespace ProgramPrognos
                 memo(paketsheet.Name);
                 PaketSheet(paketsheet, qpaket, startsem, endsem, inst);
 
-                Excel.Worksheet coursesheet = xldict[inst].Sheets.Add();
-                coursesheet.Name = coursesheetname;
                 memo(coursesheet.Name);
                 CourseSheet(coursesheet, qprog, qpaket, qcourse, startsem, endsem);
 
@@ -3344,6 +3476,7 @@ namespace ProgramPrognos
 
         private void Prognosbutton_Click(object sender, EventArgs e)
         {
+            prognos = true;
 
             lastsemwithdata = TBlastsem.Text;
             //Create COM Objects. Create a COM object for everything that is referenced
@@ -3412,8 +3545,8 @@ namespace ProgramPrognos
             memo("# courses (with new) = " + qcourse.Count());
 
 
-            string startsem = "VT22";
-            string endsem = "HT23";
+            string startsem = "VT23";
+            string endsem = "HT24";
 
             string instinst = Form1.hda;
 
