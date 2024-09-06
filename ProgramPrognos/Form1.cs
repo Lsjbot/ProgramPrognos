@@ -58,8 +58,8 @@ namespace ProgramPrognos
             docfolderlabel.Text = "Document folder " + docfolder;
 
             string fn = folder + @"\programkopplingar.txt";
-            string[] ss = Directory.GetDirectories(homefolder);
-            Directory.GetFiles(folder);
+            //string[] ss = Directory.GetDirectories(homefolder);
+            //Directory.GetFiles(folder);
 
             using (StreamReader sr = new StreamReader(fn))
             {
@@ -106,7 +106,7 @@ namespace ProgramPrognos
             int year = DateTime.Now.Year -5;
 
             //Från budgetpropp 2024:
-            pengindex.Add(2025, 1.073);
+            //pengindex.Add(2025, 1.073);
             pengindex.Add(2026, 1.097);
 
             string fn = folder + "\\ers_belopp_lokala YYYY.txt";
@@ -169,6 +169,9 @@ namespace ProgramPrognos
 
         public static double get_pengindex(int year)
         {
+            if (year <= 0)
+                return pengindex[reference_year];
+
             if (year < 2000)
                 return get_pengindex(2000 + year);
 
@@ -414,8 +417,9 @@ namespace ProgramPrognos
             int nline = 0;
             using (StreamReader sr = new StreamReader(fn))
             {
-                sr.ReadLine();//throw away two header lines
+                string head = sr.ReadLine();
                 sr.ReadLine();
+                string[] hwords = head.Split('\t');
                 int offset = 7;
 
                 int progcol = 1;
@@ -428,6 +432,39 @@ namespace ProgramPrognos
                 int acceptcol = 4;
                 int u1col = 5;
                 int u2col = 6;
+
+                for (int i=0;i<hwords.Length;i++)
+                {
+                    switch (hwords[i])
+                    {
+                        case "Kull": batchcol = i;
+                            break;
+                        case "Program":
+                            progcol = i;
+                            break;
+                        case "Antal examinerade":
+                            examcol = i;
+                            break;
+                        case " Behöriga 1a-handssökande":
+                            applcol = i;
+                            break;
+                        case "Antagna nuläge":
+                            acceptcol = i;
+                            break;
+                        case "Antagna urval 1":
+                            u1col = i;
+                            break;
+                        case "Antagna urval 2":
+                            u2col = i;
+                            break;
+                        case "Reserver":
+                            reservecol = i;
+                            break;
+                        case "T1":
+                            offset = i-1;
+                            break;
+                    }
+                }
 
                 //if (fn.Contains("_classified"))
                 //{
@@ -462,9 +499,9 @@ namespace ProgramPrognos
                     if (appl < 0)
                         appl = 0; 
                     bool anynotnull = (actualstud[0] != null || appl > 0);
-                    for (int i = 1; i < programbatchclass.maxsem; i++)
+                    for (int i = 1; i < programbatchclass.maxsem; i++) 
                     {
-                        if (offset + i >= words.Length)
+                        if (offset + i >= words.Length || !hwords[offset+i].StartsWith("T"))
                             actualstud[i] = null;
                         else
                         {
@@ -560,6 +597,22 @@ namespace ProgramPrognos
             //string fn1 = folder + @"\Programretention 230810.txt";
             //string fn1 = folder + @"\Programretention 231215.txt";
             string fn1 = folder + @"\Programretention 240229.txt";
+            //string fn1 = folder + @"\Programretention 240830.txt";
+
+            DateTime newest = DateTime.MinValue;
+            foreach (string ffnn in Directory.GetFiles(folder))
+            {
+                //memo(ffnn);
+                if (!ffnn.ToLower().Contains("\\programretention"))
+                    continue;
+                if (!ffnn.EndsWith(".txt"))
+                    continue;
+                if (File.GetCreationTime(ffnn) > newest)
+                {
+                    newest = File.GetCreationTime(ffnn);
+                    fn1 = ffnn;
+                }
+            }
             //if (fn1.Contains("_v2"))
             read_retention_v3(fn1);
             //else
@@ -596,6 +649,8 @@ namespace ProgramPrognos
                 memo(p + "\t" + origprogramdict[p].prod_per_student.frachst.ToString("N1") + " hst per stud");
                 //if (p == "Produktionstekniker 120 hp")
                 //    origprogramdict[p].fracproddict = origprogramdict["Energiteknikerprogrammet"].fracproddict;
+                if (p == "Ekonomprogrammet - Business Management")
+                    origprogramdict[p].fracproddict = origprogramdict["Ekonomprogrammet"].fracproddict;
                 origprogramdict[p].set_homeinst();
             }
 
@@ -2430,23 +2485,26 @@ namespace ProgramPrognos
             return dict;
         }
 
-        public static double hstkr(double hst, Dictionary<string,double> hstpeng)
+        public static double hstkr(double hst, Dictionary<string,double> hstpeng, int year)
         {
             double kr = 0;
             foreach (string area in hstpeng.Keys)
             {
                 kr += lokal_ers_hst[area] * hstpeng[area];
             }
+            if (pengindex.ContainsKey(year))
+                kr *= get_pengindex(year);
             return kr * hst;
         }
 
-        public static double hprkr(double hst, Dictionary<string, double> hstpeng)
+        public static double hprkr(double hst, Dictionary<string, double> hstpeng,int year)
         {
             double kr = 0;
             foreach (string area in hstpeng.Keys)
             {
                 kr += lokal_ers_hpr[area] * hstpeng[area];
             }
+            kr *= get_pengindex(year);
             return kr * hst;
         }
 
@@ -2473,8 +2531,8 @@ namespace ProgramPrognos
                 if (hst > 0)
                 {
                     double hpr = util.tryconvertdouble(d.Get("HPR utfall"));
-                    double krhst = hstkr(hst, course.studentpengarea);
-                    double krhpr = hprkr(hpr, course.studentpengarea);
+                    double krhst = hstkr(hst, course.studentpengarea,-1);
+                    double krhpr = hprkr(hpr, course.studentpengarea,-1);
                     double kr = krhst + krhpr;
                     course.totalprod.add(hst, hpr, krhst, krhpr, kr);
                     course.activecourse = true;
@@ -2512,14 +2570,25 @@ namespace ProgramPrognos
             read_aktiva_utb_file();
             read_fkfile();
             read_program_programkurser_intag();
-            read_antagningsstatistik_linnea(folder+"\\"+ "antagning kurspaket V22 per_utb_v2.txt");
+            read_antagningsstatistik_linnea(folder + "\\" + "antagning kurspaket V22 per_utb_v2.txt");
             read_antagningsstatistik_linnea(folder + "\\" + "antagning kurspaket H22 per_utb_v2.txt");
             read_antagningsstatistik_linnea(folder + "\\" + "antagning kurspaket V23 per_utb_v2.txt");
             read_antagningsstatistik_linnea(folder + "\\" + "antagning kurspaket H23 per_utb_v2.txt");
+            read_antagningsstatistik_linnea(folder + "\\" + "antagning kurspaket V24 per_utb_v2.txt");
+            read_antagningsstatistik_linnea(folder + "\\" + "antagning kurspaket H24 per_utb_v2.txt");
             fk_transitions_parts();
             do_hst_hpr();
             normalize_pccoursedict();
             read_kurspaketregistrering("VT22"); //reads from VT22 onwards as long as there is data
+
+            foreach (string p in origprogramdict.Keys)
+            {
+                origprogramdict[p].set_homeinst();
+            }
+
+
+
+            Excelplanningbutton.Enabled = true;
         }
 
         string parenrex = @"\((.*)\)";
@@ -3361,6 +3430,8 @@ namespace ProgramPrognos
             {
                 if (course.courseincomedict.Count == 0)
                     continue;
+                //if (course.homeinst != "Institutionen för språk, litteratur och lärande")
+                //    continue;
                 string bestcode = course.bestcode();
                 double income = course.courseincomedict[bestcode];
                 double profit = income - 1.6 * course.coursecostdict[bestcode];
@@ -3374,6 +3445,8 @@ namespace ProgramPrognos
                         continue;
                     int n1 = pb.appldict.Getint(s1);
                     int ntot = pb.appldict.Getint(stot);
+                    if (n1 < 20 && ntot < 100)
+                        memo(bestcode+"\t"+course.name+"\t"+n1+"\t"+ntot);
                     int i1 = 0;
                     if (n1 > low1)
                     {
@@ -3520,6 +3593,59 @@ namespace ProgramPrognos
             }
             while (j < ncelltot);
 
+        }
+
+        private void ProgInstbutton_Click(object sender, EventArgs e)
+        {
+            foreach (programclass pc in origprogramdict.Values)
+            {
+                Dictionary<string, double> studdict = new Dictionary<string, double>();
+                double totstud = 0;
+                studdict.Add(pc.homeinst, 0);
+                foreach (int sem in pc.coursedict.Keys)
+                {
+                    foreach (string code in pc.coursedict[sem].Keys)
+                    {
+                        totstud += pc.coursedict[sem][code]*fkcodedict[code].hp;
+                        if (fkcodedict[code].homeinst == pc.homeinst)
+                        {
+                            studdict[pc.homeinst] += pc.coursedict[sem][code] * fkcodedict[code].hp;
+                        }
+                        else
+                        {
+                            string cc = code + " " + fkcodedict[code].name;
+                            if (studdict.ContainsKey(cc))
+                                studdict[cc] += pc.coursedict[sem][code] * fkcodedict[code].hp;
+                            else
+                                studdict.Add(cc,pc.coursedict[sem][code] * fkcodedict[code].hp);
+                            cc = fkcodedict[code].homeinst;
+                            if (studdict.ContainsKey(cc))
+                                studdict[cc] += pc.coursedict[sem][code] * fkcodedict[code].hp;
+                            else
+                                studdict.Add(cc, pc.coursedict[sem][code] * fkcodedict[code].hp);
+                        }
+                    }
+                }
+                if (totstud > 0)
+                {
+                    memo(pc.name+"\t"+instshortdict[pc.homeinst]);
+                    foreach (string inst in instshortdict.Keys)
+                    {
+                        if (studdict.ContainsKey(inst) && studdict[inst] > 0)
+                        {
+                            memo("\t" + instshortdict[inst] + "\t" + (100 * studdict[inst] / totstud) + " %");
+                        }
+                    }
+                    foreach (string cc in studdict.Keys)
+                    {
+                        if (!instshortdict.ContainsKey(cc) && studdict[cc] > 0)
+                        {
+                            memo("\t" + cc + "\t" + (100 * studdict[cc] / totstud) + " %");
+                        }
+                    }
+                    memo("");
+                }
+            }
         }
     }
 }

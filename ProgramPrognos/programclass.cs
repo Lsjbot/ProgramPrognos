@@ -469,6 +469,37 @@ namespace ProgramPrognos
                 }
             }
 
+            if (homeinst == Form1.utaninst && this.coursedict.Count > 0)
+            {
+                Dictionary<string, double> studdict = new Dictionary<string, double>();
+                double totstud = 0;
+                studdict.Add(this.homeinst, 0);
+                foreach (int sem in this.coursedict.Keys)
+                {
+                    foreach (string code in this.coursedict[sem].Keys)
+                    {
+                        totstud += this.coursedict[sem][code] * Form1.fkcodedict[code].hp;
+                        string cc = Form1.fkcodedict[code].homeinst;
+                        if (studdict.ContainsKey(cc))
+                            studdict[cc] += this.coursedict[sem][code] * Form1.fkcodedict[code].hp;
+                        else
+                            studdict.Add(cc, this.coursedict[sem][code] * Form1.fkcodedict[code].hp);
+                    }
+                }
+                if (totstud > 0)
+                {
+                    double maxstud = 0;
+                    foreach (string inst in Form1.instshortdict.Keys)
+                    {
+                        if (studdict.ContainsKey(inst) && studdict[inst] > maxstud)
+                        {
+                            maxstud = studdict[inst];
+                            this.homeinst = inst;
+                        }
+                    }
+                }
+
+            }
             if (homeinst == Form1.utaninst && name == "Produktionstekniker 120 hp")
                 homeinst = "Institutionen för information och teknik";
         }

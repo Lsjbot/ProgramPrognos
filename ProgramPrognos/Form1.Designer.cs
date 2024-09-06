@@ -66,6 +66,7 @@ namespace ProgramPrognos
             this.applicantbutton = new System.Windows.Forms.Button();
             this.programprofitbutton = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
+            this.ProgInstbutton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -405,6 +406,7 @@ namespace ProgramPrognos
             // 
             // Excelplanningbutton
             // 
+            this.Excelplanningbutton.Enabled = false;
             this.Excelplanningbutton.Location = new System.Drawing.Point(616, 16);
             this.Excelplanningbutton.Name = "Excelplanningbutton";
             this.Excelplanningbutton.Size = new System.Drawing.Size(102, 34);
@@ -475,11 +477,22 @@ namespace ProgramPrognos
             this.button1.UseVisualStyleBackColor = true;
             this.button1.Click += new System.EventHandler(this.button1_Click_1);
             // 
+            // ProgInstbutton
+            // 
+            this.ProgInstbutton.Location = new System.Drawing.Point(255, 443);
+            this.ProgInstbutton.Name = "ProgInstbutton";
+            this.ProgInstbutton.Size = new System.Drawing.Size(95, 39);
+            this.ProgInstbutton.TabIndex = 31;
+            this.ProgInstbutton.Text = "Programkurser på \"fel\" inst";
+            this.ProgInstbutton.UseVisualStyleBackColor = true;
+            this.ProgInstbutton.Click += new System.EventHandler(this.ProgInstbutton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(894, 571);
+            this.Controls.Add(this.ProgInstbutton);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.programprofitbutton);
             this.Controls.Add(this.applicantbutton);
@@ -561,6 +574,7 @@ namespace ProgramPrognos
         private System.Windows.Forms.Button applicantbutton;
         private System.Windows.Forms.Button programprofitbutton;
         private System.Windows.Forms.Button button1;
+        private System.Windows.Forms.Button ProgInstbutton;
     }
 }
 

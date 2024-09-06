@@ -304,7 +304,7 @@ namespace ProgramPrognos
         public static string yymmdd()
         {
             DateTime now = DateTime.Now;
-            return now.Year + "-" + now.Month + "-" + now.Day;
+            return now.ToString("yyMMdd");//now.Year + "-" + now.Month + "-" + now.Day;
         }
 
         public static string timestampfolder(string folder)
