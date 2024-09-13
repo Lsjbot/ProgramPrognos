@@ -177,10 +177,12 @@ namespace ProgramPrognos
         Dictionary<string, int> rethd;
         Dictionary<string, int> coursehd;
         Dictionary<string, int> sumhd;
+        Dictionary<string, int> progkurshd;
         Dictionary<string, int> fksumrow;
         int retoffset = 5;
         int courseoffset = 2;
         int progoffset = 2;
+        int progkursoffset = 3;
         int sumoffset = 6;
         string acceptstring = "Antas slut ";
         string acceptu1string = "Antas U1 ";
@@ -205,6 +207,8 @@ namespace ProgramPrognos
         string paysheetname = "Betalande stud";
         string paketsheetname = "Kurspaket";
         string sumsheetname = "Summa";
+        string progkurssheetname = "Prog-kurs";
+        Dictionary<int, string> progkurssheetnames = new Dictionary<int, string>();
         string applstring = "1:ahand ";
         string accstring = "Antagna";
         string studhststring = "Stud/HST?";
@@ -418,6 +422,7 @@ namespace ProgramPrognos
                 int row = rrow[sheet.Name][pc.name];
                 for (int year = startyear; year <= endyear; year++)
                 {
+                    int year4 = year + 2000;
                     int colyear = planhd[moneystring + "20" + year] + 1;
                     double hstpeng = pc.fracproddict[inst].hstpeng;
                     if (hstpeng == 0)
@@ -437,7 +442,16 @@ namespace ProgramPrognos
                     {
                         int colhst = plan2hd[hststring + "20" + year] + 1;
                         int colhpr = plan2hd[hprstring + "20" + year] + 1;
-                        sheet.Cells[row, colyear].Formula = toreplace + "=" + hstpeng + "*'" + detailsheetname + "'!" + Cellname(row, colhst) + "+" + hprpeng + "*'" + detailsheetname + "'!" + Cellname(row, colhpr);
+                        if (pc.name.StartsWith("Nytt "))
+                        {
+                            // OLD ALGORITHM, used for new programs:
+                            sheet.Cells[row, colyear].Formula = toreplace + "=" + hstpeng + "*'" + detailsheetname + "'!" + Cellname(row, colhst) + "+" + hprpeng + "*'" + detailsheetname + "'!" + Cellname(row, colhpr);
+                        }
+                        else
+                        {
+                            // NEW ALGORITHM, used for old programs:
+                            sheet.Cells[row, colyear].Formula = toreplace + "='" + progkurssheetnames[year4] + "'!" + Cellname(2, progkurshd[pc.name] + 1);
+                        }
                     }
                 }
 
@@ -481,6 +495,17 @@ namespace ProgramPrognos
                     sem = util.incrementsemester(sem);
                 }
                 while (sem != util.shiftsemester(lastsemwithdata,2));
+
+                if (specialinputdict.ContainsKey(pc.name))
+                {
+                    foreach (string h in specialinputdict[pc.name].Keys)
+                    {
+                        if (planhd.ContainsKey(h))
+                        {
+                            sheet.Cells[row, planhd[h] + 1] = specialinputdict[pc.name][h];
+                        }
+                    }
+                }
 
             }
             //sheet.Range["B2", Cellname(qprog.Count + 1, allmaxsem + 2)].NumberFormat = "###.0%";
@@ -983,6 +1008,151 @@ namespace ProgramPrognos
 
 
         }
+
+        private void ProgkursSheet(Excel.Worksheet sheet, List<programclass> qprog, List<programclass> qcourse, int year, string inst)
+        {
+            progkurshd = new Dictionary<string, int>() { { "Kurs", 0 }, { "Kurskod", 1 }, { "Ämne", 2 } };
+
+            int jcol = progkurshd.Count;
+            foreach (programclass pc in qprog)
+            {
+                progkurshd.Add(pc.name, jcol);
+                jcol++;
+            }
+
+            SheetWithHeader(sheet, qprog.Count + progkursoffset, progkurshd);
+
+            if (!rrow.ContainsKey(sheet.Name))
+                rrow.Add(sheet.Name, ProgramNames(sheet, qcourse, progkursoffset));
+            sheet.Cells[2, 1] = "Total";
+            sheet.Rows[2].Font.Bold = true;
+            for (int icol = 4; icol <= progkurshd.Count; icol++)
+            {
+                sheet.Cells[2, icol].Formula = "=SUM(" + Cellname(3, icol) + ":" + Cellname(3 + qcourse.Count, icol) + ")";
+            }
+
+            string vt = "VT" + year % 100;
+            string ht = "HT" + year % 100;
+            int vtcol = bathd[vt] + 1;
+            int htcol = bathd[ht] + 1;
+
+            sheet.Cells[3, 1] = "Stud";
+            sheet.Rows[3].Font.Bold = true;
+            for (int icol = 4; icol <= progkurshd.Count; icol++)
+            {
+                sheet.Cells[3, icol].Formula = toreplace+"=SUMIF("+batsheetname+"!A2:"+Cellname(batsheetrow,htcol)+";"+Cellname(1,icol)+";"+batsheetname+"!"+Cellname(2,vtcol)+":"+Cellname(batsheetrow,htcol)+")";
+            }
+
+            //='Sheet 1'!A3
+            double krhstsum = 0;
+            double prestsum = 0;
+            int ncourses = 0;
+
+            Dictionary<string, int> coderow = new Dictionary<string, int>();
+            Dictionary<string, double> krstuddict = new Dictionary<string, double>();
+
+            foreach (programclass cc in qcourse)
+            {
+                if (cc.homeinst == Form1.utaninst)
+                    continue;
+                int row = rrow[sheet.Name][cc.name];
+
+                sheet.Cells[row, 1] = cc.name;
+                sheet.Cells[row, 2] = cc.bestcode();
+                sheet.Cells[row, 3] = cc.subjectcode;
+
+                bool nykurs = cc.name.StartsWith(newcoursename);
+                double prest = 0.8;
+                if (cc.totalprod.frachst > 0)
+                {
+                    prest = cc.totalprod.frachpr / cc.totalprod.frachst;
+                    if (prest > 1)
+                        prest = 1;
+                }
+                else if (nykurs)
+                {
+                    prest = prestsum / ncourses;
+                }
+                prestsum += prest;
+
+                double krhst;
+                if (nykurs)
+                    krhst = krhstsum / ncourses;
+                else
+                    krhst = Form1.hstkr(1, cc.studentpengarea, -1) + prest * Form1.hprkr(1, cc.studentpengarea, -1);
+                //coursesheet.Cells[nrow, moneycol].Value = krhst;
+                krhstsum += krhst;
+                ncourses++;
+                double krstud = krhst * cc.hp / 60 * Form1.get_pengindex(year);
+                krstuddict.Add(cc.bestcode(), krstud);
+
+                coderow.Add(cc.bestcode(), row);
+            }
+
+            foreach (programclass pc in qprog)
+            {
+                int icol = progkurshd[pc.name] + 1;
+                foreach (string sm in new List<string>(){vt,ht })
+                {
+                    foreach (int isem in pc.coursedict.Keys)
+                    {
+                        string batstart = util.find_batstart(sm, isem);
+                        if (batsemref[pc.name].ContainsKey(batstart)
+                            && batsemref[pc.name][batstart].ContainsKey(isem))
+                        {
+                            foreach (string ccode in pc.coursedict[isem].Keys)
+                            {
+                                if (!coderow.ContainsKey(ccode))
+                                    continue;
+                                string sumref = "";
+                                if (sheet.Cells[coderow[ccode], icol].Value != null)
+                                    sumref = sheet.Cells[coderow[ccode], icol].Value;
+                                if (String.IsNullOrEmpty(sumref))
+                                    sumref = toreplace + "=";
+                                else
+                                    sumref += "+";
+                                sumref += batsemref[pc.name][batstart][isem];
+                                sumref += "*" + pc.coursedict[isem][ccode];
+                                sumref += "*" + krstuddict[ccode];
+                                sheet.Cells[coderow[ccode], icol].Value = sumref;
+                            }
+                        }
+                    }
+                }
+
+            }
+
+
+            //sheet.Range["B2", Cellname(qprog.Count + 1, allmaxsem + 2)].NumberFormat = "###.0%";
+            //sheet.Cells[1, 1].Locked = false;
+            sheet.Range["d2", Cellname(qprog.Count + 2, progkurshd.Count)].NumberFormat = "### ### ###";
+            //sheet.Range["B2", Cellname(qprog.Count + 2, 6)].Interior.Color = Excel.XlRgbColor.rgbLightPink;
+            for (int i = 2; i < 7; i++)
+            {
+                Excel.Range qa = sheet.Columns[i];
+                qa.ColumnWidth = 15;
+                //qa.Interior.Color = Excel.XlRgbColor.rgbPink;
+                //qa.FormatConditions.Add(Excel.XlFormatConditionType.xlCellValue, Excel.XlFormatConditionOperator.xlLess, 10);
+            }
+
+
+            //for (int i = lastcolwithdata+1; i <=planhd.Count; i++)
+            //{
+            //    Excel.Range qa = sheet.Columns[i];
+            //    //qa.ColumnWidth = 15;
+            //    qa.Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+            //}
+
+            //sheet.Range[Cellname(3, lastcolwithdata + 1), Cellname(qprog.Count + 2, planhd.Count + 1)].Locked = false;
+            //sheet.Range[Cellname(3, lastcolwithdata + 1), Cellname(qprog.Count + 2, planhd.Count)].Interior.Color = Excel.XlRgbColor.rgbPaleGoldenrod;
+            //sheet.Range[Cellname(3, lastcolwithdata + 1), Cellname(qprog.Count + 2, planhd.Count)].Borders.LineStyle = Excel.XlLineStyle.xlContinuous;
+
+
+            //sheet.FreezeColumns(1);
+            //sheet.Protect();
+        }
+
+
         private void PaketSheet(Excel.Worksheet sheet, List<programclass> qprog, string startsem, string endsem, string inst)
         {
             SheetWithHeader(sheet, qprog.Count + 2, planhd);
@@ -1837,6 +2007,7 @@ namespace ProgramPrognos
                 //FK-studenter:
                 double lastvt = 0;
                 double lastht = 0;
+                bool torepeat = false;
                 foreach (string sm in semlist)
                 {
                     int ncol = coursehd[fkstudstring + sm] + 1;
@@ -1849,8 +2020,10 @@ namespace ProgramPrognos
                             lastvt = stud;
                         else
                             lastht = stud;
+                        if (sm == lastsemwithdata || sm == util.decrementsemester(lastsemwithdata) || sm == util.incrementsemester(lastsemwithdata))
+                            torepeat = true;
                     }
-                    else
+                    else if (torepeat)
                     {
                         double stud;
                         if (sm.StartsWith("V"))
@@ -2069,22 +2242,26 @@ namespace ProgramPrognos
 
             ////Testing if it works to just move it here from CoursesheetPrognos
 
-            //var qsubj = (from c in qcourse select c.subjectcode).Distinct();
-            //var qinst = (from c in qcourse select c.homeinst).Distinct();
+            var qsubj = (from c in qcourse select c.subjectcode).Distinct();
+            var qinst = (from c in qcourse select c.homeinst).Distinct();
 
-            //int srow = lastnewcourseline + 2;
-            //coursesheet.Cells[srow, 1] = "Summerat per ämne";
-            //string coderange = Cellname(totalrow + 1, codecol + 1) + ":" + Cellname(lastnewcourseline, codecol + 1);
-            //foreach (string subj in qsubj)
-            //{
-            //    srow++;
-            //    fksumrow.Add(subj, srow);
-            //    coursesheet.Cells[srow, instcol] = subj;
-            //    for (int i = moneycol + 1; i <= coursehd.Count; i++)
-            //        coursesheet.Cells[srow, i] = toreplace + "=SUMIF(" + coderange + ";" + Cellname(srow, instcol) + ";" + Cellname(totalrow + 1, i) + ":" + Cellname(lastnewcourseline, i) + ")";
-            //    coursesheet.Cells[srow, instcol + 1] = toreplace + "=" + Cellname(srow, instcol + 3) + "+" + Cellname(srow, instcol + 5);
-            //    coursesheet.Cells[srow, instcol + 2] = toreplace + "=" + Cellname(srow, instcol + 4) + "+" + Cellname(srow, instcol + 6);
-            //}
+            int srow = lastnewcourseline + 2;
+            int subjcol = moneycol - 3;
+            coursesheet.Cells[srow, subjcol] = "Summerat per ämne";
+            coursesheet.Cells[srow, subjcol + 2] = "Prog+" + coursesheet.Cells[1, moneycol + 3].Value;
+            for (int i = subjcol + 4; i <= coursehd.Count; i++)
+                coursesheet.Cells[srow, i] = coursesheet.Cells[1, i];
+            string coderange = Cellname(totalrow + 1, codecol + 1) + ":" + Cellname(lastnewcourseline, codecol + 1);
+            foreach (string subj in qsubj)
+            {
+                srow++;
+                fksumrow.Add(subj, srow);
+                coursesheet.Cells[srow, subjcol+1] = subj;
+                for (int i = subjcol+4; i <= coursehd.Count; i++)
+                    coursesheet.Cells[srow, i] = toreplace + "=SUMIF(" + coderange + ";" + Cellname(srow, subjcol+1) + ";" + Cellname(totalrow + 1, i) + ":" + Cellname(lastnewcourseline, i) + ")";
+                coursesheet.Cells[srow,subjcol+2] = toreplace + "=" + Cellname(srow, moneycol + 3) + "+" + Cellname(srow, moneycol+8);
+                //coursesheet.Cells[srow, subjcol+3] = toreplace + "=" + Cellname(srow, instcol + 4) + "+" + Cellname(srow, instcol + 6);
+            }
 
             //srow++;
             //coursesheet.Cells[srow, instcol] = "Summerat per institution";
@@ -2103,14 +2280,15 @@ namespace ProgramPrognos
             ////End testing section
 
 
-            coursesheet.Range["f3", Cellname(qcourse.Count + courseoffset, 6)].NumberFormat = "###.0%";
-            coursesheet.Range["g3", "k1999"].NumberFormat = "# ### ###";
-            coursesheet.Range["g3", "k1999"].ColumnWidth = 13;
+            coursesheet.Range["e3", Cellname(qcourse.Count + courseoffset, 5)].NumberFormat = "###.0%";
+            coursesheet.Range["f3", "p"+srow].NumberFormat = "# ### ###";
+            coursesheet.Range["f3", "p"+lastnewcourseline].ColumnWidth = 13;
+            coursesheet.Range["e"+(lastnewcourseline+2), "e" + srow].NumberFormat = "# ### ###";
             coursesheet.Range["A1", "GD1"].WrapText = true;
             //coursesheet.Range["f3", "O999"].Interior.Color = Color.Pink;
             ////coursesheet.Range["z3", "ai999"].NumberFormat = "# ###.#";
             //coursesheet.Range["z3", "ai999"].Interior.Color = Color.Yellow;
-            coursesheet.Range["aj3", "dt999"].NumberFormat = "# ###.#";
+            coursesheet.Range["aj3", "dt"+lastnewcourseline].NumberFormat = "# ###.#";
             //coursesheet.Range["aj3", "as999"].Interior.Color = Color.Tan;
             foreach (string s in coursehd.Keys)
             {
@@ -2842,7 +3020,10 @@ namespace ProgramPrognos
                     if (dict.Count > 0)
                     {
                         batsem.Add(bc.batchstart, dict);
-                        batappl.Add(bc.batchstart, (double)bc.applicants[0]);
+                        if (bc.applicants[0] == null)
+                            batappl.Add(bc.batchstart, 0);
+                        else
+                            batappl.Add(bc.batchstart, (double)bc.applicants[0]);
                         batacc.Add(bc.batchstart, bc.getstud(0));
                         nrow++;
                     }
@@ -2965,6 +3146,78 @@ namespace ProgramPrognos
             }
         }
 
+        Dictionary<string, Dictionary<string, int>> specialinputdict = new Dictionary<string, Dictionary<string, int>>();
+        private void read_special_input(string inst)
+        {
+            openFileDialog1.InitialDirectory = Form1.folder;
+            openFileDialog1.Filter = "txt files (*.txt)|*.txt|All files (*.*)|*.*";
+            openFileDialog1.Title = "Select special input file for " + inst;
+            Console.WriteLine("opendialog1.Show:");
+            if (openFileDialog1.ShowDialog() == DialogResult.OK)
+            {
+                memo("Reading special " + openFileDialog1.FileName);
+                int nchange = 0;
+                using (StreamReader sr = new StreamReader(openFileDialog1.FileName))
+                {
+                    string hline = sr.ReadLine();
+                    string[] hwords = hline.Split('\t');
+                    sr.ReadLine();
+                    while (!sr.EndOfStream)
+                    {
+                        string line = sr.ReadLine();
+                        string[] w = line.Split('\t');
+                        var pc = Form1.findprogram(w[0]);
+                        if (pc != null && w.Length > 1)
+                        {
+                            for (int i=1;i<w.Length;i++)
+                            {
+                                if (!String.IsNullOrEmpty(w[i]))
+                                {
+                                    int n = util.tryconvert(w[i]);
+                                    if (n >= 0)
+                                    {
+                                        string sem = hwords[i].Replace("T1 ", "");
+                                        var bc = pc.getbatch(sem);
+                                        if (bc != null)
+                                        {
+                                            bc.actualsemstud[1] = n;
+                                        }
+                                        if (!specialinputdict.ContainsKey(pc.name))
+                                        {
+                                            specialinputdict.Add(pc.name, new Dictionary<string, int>());
+                                        }
+                                        if (!specialinputdict[pc.name].ContainsKey(hwords[i]))
+                                        {
+                                            specialinputdict[pc.name].Add(hwords[i], n);
+                                        }
+                                        else
+                                        {
+                                            specialinputdict[pc.name][hwords[i]] = n;
+                                        }
+                                        nchange++;
+
+                                        //else
+                                        //{
+                                        //    double?[] actualstud = new double?[programbatchclass.maxsem];
+                                        //    for (int j = 0; j < programbatchclass.maxsem; j++)
+                                        //    {
+                                        //        actualstud[j] = null;
+                                        //    }
+                                        //    actualstud[1] = n;
+                                        //    programbatchclass b = new programbatchclass(actualstud, pc.id, sem);
+                                        //    pc.batchlist.Add(b);
+                                        //}
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+                memo("Changed values: " + nchange);
+            }
+        }
+
         private void Excelbutton_Click(object sender, EventArgs e)
         {
             prognos = false;
@@ -2977,6 +3230,10 @@ namespace ProgramPrognos
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
+            int startyear = 2022;
+            int endyear = 2026;
+            string startsem = "VT" + startyear % 100;
+            string endsem = "HT" + endyear % 100;
 
             Dictionary<string, string> fninst = new Dictionary<string, string>();
             Dictionary<string, Excel.Workbook> xldict = new Dictionary<string, Excel.Workbook>();
@@ -2999,6 +3256,8 @@ namespace ProgramPrognos
             foreach (string inst in fninst.Keys)
             {
                 rrow.Clear();
+                batsemref.Clear();
+                progkurssheetnames.Clear();
                 memo(inst);
                 //if (inst != "Institutionen för information och teknik")
                 //    continue;
@@ -3007,15 +3266,30 @@ namespace ProgramPrognos
                 if (!LBinst.SelectedItems.Contains(inst))
                     continue;
 
+                if (CBspecialinput.Checked)
+                {
+                    read_special_input(inst);
+                }
+
                 List<programclass> qprog;
+                IEnumerable<programclass> qpr;
                 if (RB_homeinst.Checked)
-                    qprog = (from c in Form1.origprogramdict
+                    qpr = from c in Form1.origprogramdict
                              where c.Value.utype != "Kurspaket"
-                             where c.Value.homeinst == inst select c.Value).ToList();
+                             where c.Value.homeinst == inst select c.Value;
                 else
-                    qprog = (from c in Form1.origprogramdict
+                    qpr = from c in Form1.origprogramdict
                              where c.Value.utype != "Kurspaket"
-                             where c.Value.fracproddict.ContainsKey(inst) select c.Value).ToList();
+                             where c.Value.fracproddict.ContainsKey(inst) || c.Value.homeinst == inst
+                             select c.Value;
+                if (CBsortprog.Checked)
+                {
+                    qprog = qpr.OrderBy(c => (c.homeinst!=inst)).ThenBy(c=>!c.hasbeginners(startsem,endsem)).ThenBy(c=>c.name).ToList();
+                }
+                else
+                {
+                    qprog = qpr.ToList();
+                }
 
                 var qpaket = (from c in Form1.origprogramdict
                          where c.Value.utype == "Kurspaket"
@@ -3083,26 +3357,48 @@ namespace ProgramPrognos
                             qprog.Add(pm);
                         }
                         break;
+                    case "Institutionen för lärarutbildning":
+                        var ql8 = (from c in qprog where c.semesters == 8 select c).ToList();
+                        if (ql8.Count > 0)
+                        {
+                            programclass p6 = programclass.clone(ql8);
+                            p6.name = "Nytt program 240 hp";
+                            qprog.Add(p6);
+                        }
+                        var qlm = (from c in qprog where c.semesters == 4 where c.is_advanced() select c).ToList();
+                        if (qlm.Count > 0)
+                        {
+                            programclass pm = programclass.clone(qlm);
+                            pm.name = "Nytt masterprogram 120 hp";
+                            qprog.Add(pm);
+                        }
+                        break;
                     case "Institutionen för kultur och samhälle":
                         var qks6 = (from c in qprog where c.semesters == 6 select c).ToList();
-                        if (qks6.Count > 0)
-                        {
-                            programclass p6 = programclass.clone(qks6);
-                            p6.name = "Nytt program A 180 hp";
-                            qprog.Add(p6);
-                        }
-                        if (qks6.Count > 0)
-                        {
-                            programclass p6 = programclass.clone(qks6);
-                            p6.name = "Nytt program B 180 hp";
-                            qprog.Add(p6);
-                        }
-                        if (qks6.Count > 0)
-                        {
-                            programclass p6 = programclass.clone(qks6);
-                            p6.name = "Nytt program C 180 hp";
-                            qprog.Add(p6);
-                        }
+                        //if (qks6.Count > 0)
+                        //{
+                        //    programclass p6 = programclass.clone(qks6);
+                        //    p6.name = "Filmproduktion 180 hp";
+                        //    qprog.Add(p6);
+                        //}
+                        //if (qks6.Count > 0)
+                        //{
+                        //    programclass p6 = programclass.clone(qks6);
+                        //    p6.name = "Musik- och ljudproduktion 180 hp";
+                        //    qprog.Add(p6);
+                        //}
+                        //if (qks6.Count > 0)
+                        //{
+                        //    programclass p6 = programclass.clone(qks6);
+                        //    p6.name = "Medieproduktion för TV och sociala medier 180 hp";
+                        //    qprog.Add(p6);
+                        //}
+                        //if (qks6.Count > 0)
+                        //{
+                        //    programclass p6 = programclass.clone(qks6);
+                        //    p6.name = "Manus och producentskap 180 hp";
+                        //    qprog.Add(p6);
+                        //}
                         if (qks6.Count > 0)
                         {
                             programclass p6 = programclass.clone(qks6);
@@ -3155,8 +3451,7 @@ namespace ProgramPrognos
                 }
                 memo("# courses (with new) = " + qcourse.Count());
 
-                string startsem = "VT22";
-                string endsem = "HT26";
+
 
                 Excel.Worksheet mainsheet = xldict[inst].Sheets.Add();
                 mainsheet.Name = mainsheetname;
@@ -3182,6 +3477,19 @@ namespace ProgramPrognos
                 memo(detailsheet.Name);
                 sheetdictdict[inst].Add(detailsheet.Name, detailsheet);
 
+                Dictionary<int, Excel.Worksheet> progkurssheets = new Dictionary<int, Excel.Worksheet>();
+                for (int year = startyear; year <= endyear; year++)
+                {
+                    progkurssheetnames.Add(year, progkurssheetname + year);
+                    Excel.Worksheet progkurssheet = xldict[inst].Sheets.Add();
+                    progkurssheet.Name = progkurssheetnames[year];
+                    memo(progkurssheet.Name);
+                    sheetdictdict[inst].Add(progkurssheet.Name, progkurssheet);
+                    progkurssheets.Add(year, progkurssheet);
+                }
+
+
+
                 fill_coursehd(coursesheet, qprog, qpaket, qcourse, startsem, endsem);
 
                 fill_planhd(mainsheet,detailsheet,qprog,startsem, endsem);
@@ -3193,6 +3501,11 @@ namespace ProgramPrognos
                 sheetdictdict[inst].Add(batsheet.Name, batsheet);
                 BatchSheet(batsheet, qprog, startsem, endsem);
 
+                for (int year = startyear; year <= endyear; year++)
+                {
+                    memo(progkurssheets[year].Name);
+                    ProgkursSheet(progkurssheets[year], qprog, qcourse, year, inst);
+                }
 
                 memo(mainsheet.Name);
                 PlanSheet(mainsheet, qprog, startsem, endsem,inst);
@@ -3291,6 +3604,8 @@ namespace ProgramPrognos
         private void ExcelForm_Load(object sender, EventArgs e)
         {
         }
+
+
 
         private void convertonefile(string fn, Excel.Application xlApp, Excel.XlFileFormat format)
         {

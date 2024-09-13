@@ -41,12 +41,14 @@ namespace ProgramPrognos
             this.coursecheckbutton = new System.Windows.Forms.Button();
             this.LBinst = new System.Windows.Forms.ListBox();
             this.Prognosbutton = new System.Windows.Forms.Button();
+            this.CBsortprog = new System.Windows.Forms.CheckBox();
+            this.CBspecialinput = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // Excelbutton
             // 
-            this.Excelbutton.Location = new System.Drawing.Point(653, 195);
+            this.Excelbutton.Location = new System.Drawing.Point(653, 145);
             this.Excelbutton.Name = "Excelbutton";
             this.Excelbutton.Size = new System.Drawing.Size(116, 48);
             this.Excelbutton.TabIndex = 0;
@@ -64,7 +66,7 @@ namespace ProgramPrognos
             // 
             // TBlastsem
             // 
-            this.TBlastsem.Location = new System.Drawing.Point(713, 112);
+            this.TBlastsem.Location = new System.Drawing.Point(713, 49);
             this.TBlastsem.Name = "TBlastsem";
             this.TBlastsem.Size = new System.Drawing.Size(56, 20);
             this.TBlastsem.TabIndex = 2;
@@ -73,7 +75,7 @@ namespace ProgramPrognos
             // label1
             // 
             this.label1.AutoSize = true;
-            this.label1.Location = new System.Drawing.Point(586, 115);
+            this.label1.Location = new System.Drawing.Point(586, 52);
             this.label1.Name = "label1";
             this.label1.Size = new System.Drawing.Size(121, 13);
             this.label1.TabIndex = 3;
@@ -91,22 +93,22 @@ namespace ProgramPrognos
             // RB_minorprog
             // 
             this.RB_minorprog.AutoSize = true;
+            this.RB_minorprog.Checked = true;
             this.RB_minorprog.Location = new System.Drawing.Point(3, 26);
             this.RB_minorprog.Name = "RB_minorprog";
             this.RB_minorprog.Size = new System.Drawing.Size(162, 17);
             this.RB_minorprog.TabIndex = 1;
+            this.RB_minorprog.TabStop = true;
             this.RB_minorprog.Text = "Also programs with minor part";
             this.RB_minorprog.UseVisualStyleBackColor = true;
             // 
             // RB_homeinst
             // 
             this.RB_homeinst.AutoSize = true;
-            this.RB_homeinst.Checked = true;
             this.RB_homeinst.Location = new System.Drawing.Point(3, 3);
             this.RB_homeinst.Name = "RB_homeinst";
             this.RB_homeinst.Size = new System.Drawing.Size(140, 17);
             this.RB_homeinst.TabIndex = 0;
-            this.RB_homeinst.TabStop = true;
             this.RB_homeinst.Text = "Home inst programs only";
             this.RB_homeinst.UseVisualStyleBackColor = true;
             // 
@@ -145,7 +147,7 @@ namespace ProgramPrognos
             // 
             // Prognosbutton
             // 
-            this.Prognosbutton.Location = new System.Drawing.Point(653, 148);
+            this.Prognosbutton.Location = new System.Drawing.Point(653, 84);
             this.Prognosbutton.Name = "Prognosbutton";
             this.Prognosbutton.Size = new System.Drawing.Size(116, 41);
             this.Prognosbutton.TabIndex = 8;
@@ -153,11 +155,35 @@ namespace ProgramPrognos
             this.Prognosbutton.UseVisualStyleBackColor = true;
             this.Prognosbutton.Click += new System.EventHandler(this.Prognosbutton_Click);
             // 
+            // CBsortprog
+            // 
+            this.CBsortprog.AutoSize = true;
+            this.CBsortprog.Checked = true;
+            this.CBsortprog.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.CBsortprog.Location = new System.Drawing.Point(612, 249);
+            this.CBsortprog.Name = "CBsortprog";
+            this.CBsortprog.Size = new System.Drawing.Size(101, 17);
+            this.CBsortprog.TabIndex = 9;
+            this.CBsortprog.Text = "Sort program list";
+            this.CBsortprog.UseVisualStyleBackColor = true;
+            // 
+            // CBspecialinput
+            // 
+            this.CBspecialinput.AutoSize = true;
+            this.CBspecialinput.Location = new System.Drawing.Point(612, 226);
+            this.CBspecialinput.Name = "CBspecialinput";
+            this.CBspecialinput.Size = new System.Drawing.Size(128, 17);
+            this.CBspecialinput.TabIndex = 10;
+            this.CBspecialinput.Text = "Read special data file";
+            this.CBspecialinput.UseVisualStyleBackColor = true;
+            // 
             // ExcelForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 527);
+            this.Controls.Add(this.CBspecialinput);
+            this.Controls.Add(this.CBsortprog);
             this.Controls.Add(this.Prognosbutton);
             this.Controls.Add(this.LBinst);
             this.Controls.Add(this.coursecheckbutton);
@@ -191,5 +217,7 @@ namespace ProgramPrognos
         private System.Windows.Forms.Button coursecheckbutton;
         private System.Windows.Forms.ListBox LBinst;
         private System.Windows.Forms.Button Prognosbutton;
+        private System.Windows.Forms.CheckBox CBsortprog;
+        private System.Windows.Forms.CheckBox CBspecialinput;
     }
 }

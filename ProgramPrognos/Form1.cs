@@ -202,7 +202,7 @@ namespace ProgramPrognos
             subjinstdict.Add("EG", "IIT");
             subjinstdict.Add("EN", "ISLL");
             subjinstdict.Add("ET", "IIT");
-            subjinstdict.Add("EU", "IKS");
+            subjinstdict.Add("EU", "IIT");
             subjinstdict.Add("FI", "IKS");
             subjinstdict.Add("FÖ", "IKS");
             subjinstdict.Add("FR", "ISLL");
@@ -242,7 +242,7 @@ namespace ProgramPrognos
             subjinstdict.Add("SK", "IKS");
             subjinstdict.Add("SO", "IKS");
             subjinstdict.Add("SP", "ISLL");
-            subjinstdict.Add("SQ", "IKS");
+            subjinstdict.Add("SQ", "IIT");
             subjinstdict.Add("SR", "IHOV");
             subjinstdict.Add("SS", "ISLL");
             subjinstdict.Add("ST", "IIT");
@@ -1491,6 +1491,20 @@ namespace ProgramPrognos
             return ls;
         }
 
+        private List<string> parseapplcodes(string input)
+        {
+            List<string> ls = new List<string>();
+
+            string rex = @"[HV][\w\d]{4}";
+
+            foreach (Match m in Regex.Matches(input, rex))
+            {
+                if (m.Value.ToUpper() == m.Value)
+                    ls.Add(m.Value);
+            }
+            return ls;
+        }
+
         private string getsubjectcode(string code)
         {
             
@@ -1616,11 +1630,16 @@ namespace ProgramPrognos
                             fk.utype = utype;
                             fk.fee = fullfee;
                             fk.fk = true;
+                            fk.activecourse = true;
                             fk.subjectcode = getsubjectcode(coursecode);
                             if (subjinstdict.ContainsKey(fk.subjectcode))
                                 fk.homeinst = shortinstdict[subjinstdict[fk.subjectcode]];
                             if (!String.IsNullOrEmpty(words[10]))
-                                fk.partofpackage = words[10].Trim(',');
+                            {
+                                string pack = words[10].Trim(',');
+                                if (!fk.partofpackage.Contains(pack))
+                                    fk.partofpackage.Add(pack);
+                            }
                             if (!fkcodedict.ContainsKey(coursecode))
                                 fkcodedict.Add(coursecode, fk);
                             if (!fkcodedict.ContainsKey(applcode))
@@ -2209,6 +2228,13 @@ namespace ProgramPrognos
             int nfoundname = 0;
             int nnfound = 0;
             int nprognotfound = 0;
+            if (!File.Exists(fn))
+            {
+                memo("### File not found: " + fn);
+                return;
+            }
+            else
+                memo("Reading " + fn);
             using (StreamReader sr = new StreamReader(fn))
             {
                 string header = sr.ReadLine();
@@ -2386,7 +2412,7 @@ namespace ProgramPrognos
 
         private void read_special_pccoursedict()
         {
-            string fn = folder + @"\special_pccoursedict.txt";
+            string fn = folder + @"\special_pccoursedict_"+DateTime.Now.Year+".txt";
             memo("Reading w/o normalizing " + fn);
             read_pccoursedict(fn,true);
         }
@@ -2581,14 +2607,131 @@ namespace ProgramPrognos
             normalize_pccoursedict();
             read_kurspaketregistrering("VT22"); //reads from VT22 onwards as long as there is data
 
+            read_exchangestudents(2023);
+
             foreach (string p in origprogramdict.Keys)
             {
                 origprogramdict[p].set_homeinst();
+                if (origprogramdict[p].utype == "Program" && origprogramdict[p].homeinst != utaninst && origprogramdict[p].fracproddict.Count == 0)
+                {
+                    if (origprogramdict[p].semesters > 1)
+                    {
+                        var qprog = (from c in origprogramdict.Values
+                                    where c.homeinst == origprogramdict[p].homeinst
+                                    where c.utype == "Program"
+                                    where c.semesters == origprogramdict[p].semesters
+                                    where c.fracproddict.Count > 0
+                                    select c).ToList();
+                        if (qprog.Count == 0)
+                        {
+                            qprog = (from c in origprogramdict.Values
+                                     where c.homeinst == origprogramdict[p].homeinst
+                                     where c.utype == "Program"
+                                     //where c.semesters == origprogramdict[p].semesters
+                                     where c.fracproddict.Count > 0
+                                     select c).ToList();
+
+                        }
+                        var pclone = programclass.clone(qprog);
+                        origprogramdict[p].datafromtemplate(pclone);
+                    }
+                }
             }
 
 
-
             Excelplanningbutton.Enabled = true;
+            memo("==== DONE ====");
+        }
+
+        private void read_exchangestudents(int startyear)
+        {
+            string fnbase = folder + "\\kursregistrering utbytesavtal ";
+            string fn = fnbase + startyear + ".txt";
+            int year = startyear;
+            while (File.Exists(fn))
+            {
+                int nstud = 0;
+                int ncourse = 0;
+                memo("Reading " + fn);
+                using (StreamReader sr = new StreamReader(fn))
+                {
+                    sr.ReadLine();
+                    sr.ReadLine();
+                    sr.ReadLine();
+
+                    string hline = sr.ReadLine();
+                    string[] hwords = hline.Split('\t');
+
+                    string currentcode = "";
+                    programclass currentcourse = null;
+
+                    while (!sr.EndOfStream)
+                    {
+                        string line1 = sr.ReadLine();
+                        var codelist = parsecoursecodes(line1);
+                        if (codelist.Count > 0)
+                        {
+                            if (codelist.First() != currentcode)
+                            {
+                                currentcode = codelist.First();
+                                string name = line1.Replace(currentcode, "").Trim().Trim('"');
+                                currentcourse = findcourse(currentcode);
+                                if (currentcourse == null)
+                                    currentcourse = findcourse(name);
+                                if (currentcourse == null)
+                                {
+                                    currentcourse = new programclass(name);
+                                    currentcourse.name = name;
+                                    fkdict.Add(name, currentcourse);
+                                }
+                                if (!fkcodedict.ContainsKey(currentcode))
+                                    fkcodedict.Add(currentcode, currentcourse);
+                                if (!currentcourse.coursecodelist.Contains(currentcode))
+                                {
+                                    currentcourse.coursecodelist.Add(currentcode);
+                                    currentcourse.subjectcode = getsubjectcode(currentcode);
+                                    currentcourse.homeinst = (shortinstdict[subjinstdict[currentcourse.subjectcode]]);
+                                }
+                            }
+                        }
+                        else if (line1.Contains("tbytesavtal"))
+                        {
+                            string line2 = sr.ReadLine();
+                            string[] w1 = line1.Split('\t');
+                            string[] w2 = line2.Split('\t');
+                            if (parseapplcodes(w1[0]).Count > 0)
+                            {
+                                string applcode = parseapplcodes(w1[0]).First();
+                                currentcourse.applcodelist.Add(applcode);
+                                string batch = applcode[0] + "T" + (year % 100);
+                                var bc = currentcourse.getbatch(batch);
+                                if (bc != null)
+                                {
+                                    int exstud = util.tryconvert(w1[2]);
+                                    if (exstud <= 0)
+                                        exstud = util.tryconvert(w2[2]);
+                                    if (exstud > 0)
+                                    {
+                                        bc.exchangestud = exstud;
+                                        nstud += exstud;
+                                        ncourse++;
+                                    }
+                                }
+                            }
+
+                        }
+                    }
+                    memo("Exchange students " + nstud + " in " + ncourse + " courses");
+                }
+                year++;
+                fn = fnbase + year + ".txt";
+            }
+            //if (!fkcodedict.ContainsKey(applcode))
+            //    fkcodedict.Add(applcode, fk);
+            //if (!fk.applcodelist.Contains(applcode))
+            //{
+            //    fk.applcodelist.Add(applcode);
+            //}
         }
 
         string parenrex = @"\((.*)\)";
@@ -2805,23 +2948,25 @@ namespace ProgramPrognos
             }
 
             var qpart = from c in fkdict.Values
-                        where !String.IsNullOrEmpty(c.partofpackage)
+                        where c.partofpackage.Count > 0
                         select c;
             foreach (programclass part in qpart)
-            {
-                programclass paket = findprogram(part.partofpackage);
-                if (paket == null)
+                foreach (string pack in part.partofpackage)
                 {
-                    memo(part.partofpackage + " not found");
+                    programclass paket = findprogram(pack);
+                    if (paket == null)
+                    {
+                        memo(pack + " not found");
+                    }
+                    else
+                    {
+                        paket.homeinst = part.homeinst;
+                        if (!paket.coursedict.ContainsKey(1))
+                            paket.coursedict.Add(1, new Dictionary<string, double>());
+                        if (!paket.coursedict[1].ContainsKey(part.bestcode()))
+                            paket.coursedict[1].Add(part.bestcode(), 1);
+                    }
                 }
-                else
-                {
-                    paket.homeinst = part.homeinst;
-                    if (!paket.coursedict.ContainsKey(1))
-                        paket.coursedict.Add(1, new Dictionary<string, double>());
-                    paket.coursedict[1].Add(part.bestcode(), 1);
-                }
-            }
         }
 
         private double[] batchsemsum(string beforebatch, programclass pc)
@@ -2875,7 +3020,7 @@ namespace ProgramPrognos
                             if (paket != null)
                             {
                                 int reg = util.tryconvert0(words[2]);
-                                memo(name + "\t" + sem + "\t" + reg);
+                                //memo(name + "\t" + sem + "\t" + reg);
                                 programbatchclass pb = paket.getbatch(sem);
                                 if (pb == null)
                                 {

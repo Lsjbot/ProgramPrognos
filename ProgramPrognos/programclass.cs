@@ -25,7 +25,7 @@ namespace ProgramPrognos
         public string subject = "x";
         public string sector = "x";
         public string utype = "Program";
-        public string partofpackage = "";
+        public List<string> partofpackage = new List<string>();
         public static Dictionary<string, string> areanamedict = new Dictionary<string, string>()
         {
             {"L","Lärarutbildning" },
@@ -141,6 +141,29 @@ namespace ProgramPrognos
             pc.fracproddict.Add(Form1.hda, pc.totalprod.clone());
 
             return pc;
+        }
+
+        public void datafromtemplate(programclass template)
+        {
+            this.transition = template.transition;
+            this.examtransition = template.examtransition;
+            this.appltransition = transitionclass.clone(template.appltransition);
+            this.totalprod = template.totalprod.clone();
+            this.fracproddict.Add(Form1.hda, this.totalprod.clone());
+            this.prod_per_student = template.prod_per_student;
+            this.fracproddict = new Dictionary<string, fracprodclass>();
+            foreach (string inst in template.fracproddict.Keys)
+                this.fracproddict.Add(inst, template.fracproddict[inst].clone());
+            //this.yearproddict = template.yearproddict;
+            this.averageaccepted = template.averageaccepted;
+            this.fk = template.fk;
+            this.homeinst = template.homeinst;
+            this.semesters = template.semesters;
+            this.hp = template.hp;
+            this.utype = template.utype;
+            this.fee = template.fee;
+            this.partofpackage = template.partofpackage;
+
         }
 
         public programclass(string namepar)
@@ -472,6 +495,7 @@ namespace ProgramPrognos
             if (homeinst == Form1.utaninst && this.coursedict.Count > 0)
             {
                 Dictionary<string, double> studdict = new Dictionary<string, double>();
+                Dictionary<string, double> ccdict = new Dictionary<string, double>();
                 double totstud = 0;
                 studdict.Add(this.homeinst, 0);
                 foreach (int sem in this.coursedict.Keys)
@@ -484,6 +508,10 @@ namespace ProgramPrognos
                             studdict[cc] += this.coursedict[sem][code] * Form1.fkcodedict[code].hp;
                         else
                             studdict.Add(cc, this.coursedict[sem][code] * Form1.fkcodedict[code].hp);
+                        if (ccdict.ContainsKey(cc))
+                            ccdict[cc]++;
+                        else
+                            ccdict.Add(cc, 1);
                     }
                 }
                 if (totstud > 0)
@@ -498,8 +526,21 @@ namespace ProgramPrognos
                         }
                     }
                 }
+                else
+                {
+                    double ccmax = 0;
+                    foreach (string inst in Form1.instshortdict.Keys)
+                    {
+                        if (ccdict.ContainsKey(inst) && ccdict[inst] > ccmax)
+                        {
+                            ccmax = ccdict[inst];
+                            this.homeinst = inst;
+                        }
+                    }
+                }
 
             }
+
             if (homeinst == Form1.utaninst && name == "Produktionstekniker 120 hp")
                 homeinst = "Institutionen för information och teknik";
         }
@@ -773,6 +814,25 @@ namespace ProgramPrognos
             if (coursecodelist.Count > 0)
                 return coursecodelist.First();
             return "";
+        }
+
+        public int getallT1(string startsem,string endsem)
+        {
+            double n = 0;
+            string sem = startsem;
+            while (sem != endsem)
+            {
+                var bc = getbatch(sem);
+                if (bc != null)
+                    n += bc.getstud(1);
+                sem = util.incrementsemester(sem);
+            }
+            return (int)n;
+        }
+
+        public bool hasbeginners(string startsem,string endsem)
+        {
+            return getallT1(startsem, endsem) > 0;
         }
     }
 

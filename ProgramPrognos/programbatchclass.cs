@@ -27,6 +27,7 @@ namespace ProgramPrognos
         public bool actualbatch = true; //true for batch with real data, false for pure forecast
         internal dictclass appldict = null;
         public double progstud = 0; //students in course that come from programs.
+        public double exchangestud = 0; //students in course from Erasmus etc. Not included in actualsemstud
 
         public programbatchclass cloneactual() //only clone batches with real data, not forecast 
         {
@@ -105,7 +106,7 @@ namespace ProgramPrognos
         
         public double? getactualstud(int sem)
         {
-            return actualsemstud[sem];
+            return actualsemstud[sem] + exchangestud;
         }
 
         public double getstud(int sem) //termin i programmet; sem=1 => T1 etc.
@@ -115,7 +116,7 @@ namespace ProgramPrognos
             if (actualsemstud.Length < sem+1)
                 return 0;
             else if (actualsemstud[sem] != null)
-                return (double)actualsemstud[sem];
+                return (double)actualsemstud[sem]+exchangestud;
             else if (forecastsemstud[sem] != null)
                 return (double)forecastsemstud[sem];
             else
