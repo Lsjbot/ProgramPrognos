@@ -158,8 +158,10 @@ namespace ProgramPrognos
             this.averageaccepted = template.averageaccepted;
             this.fk = template.fk;
             this.homeinst = template.homeinst;
-            this.semesters = template.semesters;
-            this.hp = template.hp;
+            if (this.semesters <= 0)
+                this.semesters = template.semesters;
+            if (this.hp <= 0)
+                this.hp = template.hp;
             this.utype = template.utype;
             this.fee = template.fee;
             this.partofpackage = template.partofpackage;
@@ -185,6 +187,7 @@ namespace ProgramPrognos
             if (this.name.StartsWith("FK "))
                 this.fk = true;
             this.semesters = sem;
+            this.hp = semesters * 30;
             this.area = progarea;
             for (int i = 0; i < 4; i++)
                 this.appltransition.Add(i, new transitionclass[programbatchclass.maxsem]);
@@ -198,6 +201,7 @@ namespace ProgramPrognos
             if (this.name.StartsWith("FK "))
                 this.fk = true;
             this.semesters = sem;
+            this.hp = semesters * 30;
             this.area = progarea;
             this.extendretention(ret);
             this.prod_per_student = generate_prod(30000, 20000, 0.8);

@@ -43,6 +43,12 @@ namespace ProgramPrognos
             this.Prognosbutton = new System.Windows.Forms.Button();
             this.CBsortprog = new System.Windows.Forms.CheckBox();
             this.CBspecialinput = new System.Windows.Forms.CheckBox();
+            this.omstallningbutton = new System.Windows.Forms.Button();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.TBstartyear = new System.Windows.Forms.TextBox();
+            this.TBendyear = new System.Windows.Forms.TextBox();
+            this.CBtriangel = new System.Windows.Forms.CheckBox();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -85,7 +91,7 @@ namespace ProgramPrognos
             // 
             this.panel1.Controls.Add(this.RB_minorprog);
             this.panel1.Controls.Add(this.RB_homeinst);
-            this.panel1.Location = new System.Drawing.Point(596, 273);
+            this.panel1.Location = new System.Drawing.Point(596, 332);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 54);
             this.panel1.TabIndex = 4;
@@ -139,7 +145,7 @@ namespace ProgramPrognos
             // LBinst
             // 
             this.LBinst.FormattingEnabled = true;
-            this.LBinst.Location = new System.Drawing.Point(547, 345);
+            this.LBinst.Location = new System.Drawing.Point(547, 406);
             this.LBinst.Name = "LBinst";
             this.LBinst.SelectionMode = System.Windows.Forms.SelectionMode.MultiSimple;
             this.LBinst.Size = new System.Drawing.Size(249, 160);
@@ -177,11 +183,73 @@ namespace ProgramPrognos
             this.CBspecialinput.Text = "Read special data file";
             this.CBspecialinput.UseVisualStyleBackColor = true;
             // 
+            // omstallningbutton
+            // 
+            this.omstallningbutton.Location = new System.Drawing.Point(232, 448);
+            this.omstallningbutton.Name = "omstallningbutton";
+            this.omstallningbutton.Size = new System.Drawing.Size(125, 41);
+            this.omstallningbutton.TabIndex = 11;
+            this.omstallningbutton.Text = "Läs omställningsstudiestöd";
+            this.omstallningbutton.UseVisualStyleBackColor = true;
+            this.omstallningbutton.Click += new System.EventHandler(this.omstallningbutton_Click);
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(496, 156);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(31, 13);
+            this.label2.TabIndex = 12;
+            this.label2.Text = "Från:";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(499, 179);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(23, 13);
+            this.label3.TabIndex = 13;
+            this.label3.Text = "Till:";
+            // 
+            // TBstartyear
+            // 
+            this.TBstartyear.Location = new System.Drawing.Point(547, 148);
+            this.TBstartyear.Name = "TBstartyear";
+            this.TBstartyear.Size = new System.Drawing.Size(67, 20);
+            this.TBstartyear.TabIndex = 14;
+            this.TBstartyear.Text = "2023";
+            // 
+            // TBendyear
+            // 
+            this.TBendyear.Location = new System.Drawing.Point(547, 179);
+            this.TBendyear.Name = "TBendyear";
+            this.TBendyear.Size = new System.Drawing.Size(67, 20);
+            this.TBendyear.TabIndex = 15;
+            this.TBendyear.Text = "2030";
+            // 
+            // CBtriangel
+            // 
+            this.CBtriangel.AutoSize = true;
+            this.CBtriangel.Checked = true;
+            this.CBtriangel.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.CBtriangel.Location = new System.Drawing.Point(612, 272);
+            this.CBtriangel.Name = "CBtriangel";
+            this.CBtriangel.Size = new System.Drawing.Size(105, 17);
+            this.CBtriangel.TabIndex = 16;
+            this.CBtriangel.Text = "Flik med trianglar";
+            this.CBtriangel.UseVisualStyleBackColor = true;
+            // 
             // ExcelForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(800, 527);
+            this.ClientSize = new System.Drawing.Size(800, 578);
+            this.Controls.Add(this.CBtriangel);
+            this.Controls.Add(this.TBendyear);
+            this.Controls.Add(this.TBstartyear);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.omstallningbutton);
             this.Controls.Add(this.CBspecialinput);
             this.Controls.Add(this.CBsortprog);
             this.Controls.Add(this.Prognosbutton);
@@ -219,5 +287,11 @@ namespace ProgramPrognos
         private System.Windows.Forms.Button Prognosbutton;
         private System.Windows.Forms.CheckBox CBsortprog;
         private System.Windows.Forms.CheckBox CBspecialinput;
+        private System.Windows.Forms.Button omstallningbutton;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.TextBox TBstartyear;
+        private System.Windows.Forms.TextBox TBendyear;
+        private System.Windows.Forms.CheckBox CBtriangel;
     }
 }

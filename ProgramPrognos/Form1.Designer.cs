@@ -67,6 +67,8 @@ namespace ProgramPrognos
             this.programprofitbutton = new System.Windows.Forms.Button();
             this.button1 = new System.Windows.Forms.Button();
             this.ProgInstbutton = new System.Windows.Forms.Button();
+            this.progsubjbutton = new System.Windows.Forms.Button();
+            this.resapplbutton = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.groupBox2.SuspendLayout();
             this.SuspendLayout();
@@ -406,7 +408,6 @@ namespace ProgramPrognos
             // 
             // Excelplanningbutton
             // 
-            this.Excelplanningbutton.Enabled = false;
             this.Excelplanningbutton.Location = new System.Drawing.Point(616, 16);
             this.Excelplanningbutton.Name = "Excelplanningbutton";
             this.Excelplanningbutton.Size = new System.Drawing.Size(102, 34);
@@ -479,7 +480,7 @@ namespace ProgramPrognos
             // 
             // ProgInstbutton
             // 
-            this.ProgInstbutton.Location = new System.Drawing.Point(255, 443);
+            this.ProgInstbutton.Location = new System.Drawing.Point(255, 433);
             this.ProgInstbutton.Name = "ProgInstbutton";
             this.ProgInstbutton.Size = new System.Drawing.Size(95, 39);
             this.ProgInstbutton.TabIndex = 31;
@@ -487,11 +488,33 @@ namespace ProgramPrognos
             this.ProgInstbutton.UseVisualStyleBackColor = true;
             this.ProgInstbutton.Click += new System.EventHandler(this.ProgInstbutton_Click);
             // 
+            // progsubjbutton
+            // 
+            this.progsubjbutton.Location = new System.Drawing.Point(255, 478);
+            this.progsubjbutton.Name = "progsubjbutton";
+            this.progsubjbutton.Size = new System.Drawing.Size(95, 39);
+            this.progsubjbutton.TabIndex = 32;
+            this.progsubjbutton.Text = "Ämneskoppling program";
+            this.progsubjbutton.UseVisualStyleBackColor = true;
+            this.progsubjbutton.Click += new System.EventHandler(this.progsubjbutton_Click);
+            // 
+            // resapplbutton
+            // 
+            this.resapplbutton.Location = new System.Drawing.Point(356, 478);
+            this.resapplbutton.Name = "resapplbutton";
+            this.resapplbutton.Size = new System.Drawing.Size(75, 39);
+            this.resapplbutton.TabIndex = 33;
+            this.resapplbutton.Text = "Reserver per antagen";
+            this.resapplbutton.UseVisualStyleBackColor = true;
+            this.resapplbutton.Click += new System.EventHandler(this.resapplbutton_Click);
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(894, 571);
+            this.Controls.Add(this.resapplbutton);
+            this.Controls.Add(this.progsubjbutton);
             this.Controls.Add(this.ProgInstbutton);
             this.Controls.Add(this.button1);
             this.Controls.Add(this.programprofitbutton);
@@ -575,6 +598,8 @@ namespace ProgramPrognos
         private System.Windows.Forms.Button programprofitbutton;
         private System.Windows.Forms.Button button1;
         private System.Windows.Forms.Button ProgInstbutton;
+        private System.Windows.Forms.Button progsubjbutton;
+        private System.Windows.Forms.Button resapplbutton;
     }
 }
 

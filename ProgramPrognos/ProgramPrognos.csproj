@@ -50,6 +50,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="courseroomclass.cs" />
+    <Compile Include="CSNpostclass.cs" />
     <Compile Include="dictclass.cs" />
     <Compile Include="ExcelForm.cs">
       <SubType>Form</SubType>

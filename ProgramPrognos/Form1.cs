@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Globalization;
 
 namespace ProgramPrognos
 {
@@ -40,6 +41,7 @@ namespace ProgramPrognos
         public static Dictionary<string, double> lokal_ers_hst = new Dictionary<string, double>();
         public static Dictionary<string, double> lokal_ers_hpr = new Dictionary<string, double>();
         public static Dictionary<int, double> pengindex = new Dictionary<int, double>();
+        public static Dictionary<int, double> takbelopp = new Dictionary<int, double>();
         public static int reference_year = 2023;
         public int endyear = -1;
 
@@ -107,7 +109,10 @@ namespace ProgramPrognos
 
             //Från budgetpropp 2024:
             //pengindex.Add(2025, 1.073);
-            pengindex.Add(2026, 1.097);
+
+            //Från budgetpropp 2025:
+            pengindex.Add(2026, 1.0906);
+            pengindex.Add(2027, 1.1084);
 
             string fn = folder + "\\ers_belopp_lokala YYYY.txt";
 
@@ -152,6 +157,9 @@ namespace ProgramPrognos
                 pengindex.Add(yr, sumpeng[yr] / sumpeng[refyear]);
             }
 
+            for (int i = 2020; i < 2031; i++)
+                memo(i.ToString()+":"+get_pengindex(i).ToString());
+
             utbomrdict.Add("FK Humanistiska området", "HU");
             utbomrdict.Add("FK Idrottsliga området", "ID");
             utbomrdict.Add("FK Juridiska området", "JU");
@@ -164,6 +172,19 @@ namespace ProgramPrognos
             utbomrdict.Add("FK Undervisningsområdet", "LU");
             utbomrdict.Add("FK Vårdområdet", "VÅ");
             utbomrdict.Add("FK Övriga områden", "ÖV");
+
+            //ur budgetpropp 2025:
+            takbelopp.Add(2023, 488276);
+            takbelopp.Add(2024, 505826);
+            takbelopp.Add(2025, 513824);
+            takbelopp.Add(2026, 514089);
+            takbelopp.Add(2027, 520417);
+            takbelopp.Add(2028, 520417);
+            takbelopp.Add(2029, 520417);
+            takbelopp.Add(2030, 520417);
+            takbelopp.Add(2031, 520417);
+            takbelopp.Add(2032, 520417);
+
 
         }
 
@@ -202,7 +223,7 @@ namespace ProgramPrognos
             subjinstdict.Add("EG", "IIT");
             subjinstdict.Add("EN", "ISLL");
             subjinstdict.Add("ET", "IIT");
-            subjinstdict.Add("EU", "IIT");
+            subjinstdict.Add("EU", "IKS");
             subjinstdict.Add("FI", "IKS");
             subjinstdict.Add("FÖ", "IKS");
             subjinstdict.Add("FR", "ISLL");
@@ -651,6 +672,14 @@ namespace ProgramPrognos
                 //    origprogramdict[p].fracproddict = origprogramdict["Energiteknikerprogrammet"].fracproddict;
                 if (p == "Ekonomprogrammet - Business Management")
                     origprogramdict[p].fracproddict = origprogramdict["Ekonomprogrammet"].fracproddict;
+                if (p == "Filmproduktion 180 hp")
+                    origprogramdict[p].fracproddict = origprogramdict["Film- och TV produktion"].fracproddict;
+                if (p == "Manus och producentskap 180 hp")
+                    origprogramdict[p].fracproddict = origprogramdict["Film- och TV produktion"].fracproddict;
+                if (p == "Medieproduktion för TV och sociala medier 180 hp")
+                    origprogramdict[p].fracproddict = origprogramdict["Film- och TV produktion"].fracproddict;
+                if (p == "Musik- och ljudproduktion 180 hp")
+                    origprogramdict[p].fracproddict = origprogramdict["Film- och TV produktion"].fracproddict;
                 origprogramdict[p].set_homeinst();
             }
 
@@ -2518,7 +2547,8 @@ namespace ProgramPrognos
             {
                 kr += lokal_ers_hst[area] * hstpeng[area];
             }
-            if (pengindex.ContainsKey(year))
+            //if (pengindex.ContainsKey(year))
+            if (year > 0)
                 kr *= get_pengindex(year);
             return kr * hst;
         }
@@ -2530,7 +2560,8 @@ namespace ProgramPrognos
             {
                 kr += lokal_ers_hpr[area] * hstpeng[area];
             }
-            kr *= get_pengindex(year);
+            if (year > 0)
+                kr *= get_pengindex(year);
             return kr * hst;
         }
 
@@ -2580,11 +2611,14 @@ namespace ProgramPrognos
 
         private void do_hst_hpr()
         {
-            for (int i=2019;i<2023;i++)
+            int i = 2019;
+            string fn = folder + @"\hst_hpr_utfall_budget_reg " + i + ".txt";
+            while (File.Exists(fn))
             {
-                string fn = folder + @"\hst_hpr_utfall_budget_reg " + i + ".txt";
                 var dict = read_hst_hpr(fn);
                 do_hst_hpr_dict(dict);
+                i++;
+                fn = folder + @"\hst_hpr_utfall_budget_reg " + i + ".txt";
             }
             string fnmiss = folder + @"\missing-courses.txt";
             var dmiss = read_hst_hpr(fnmiss);
@@ -2609,9 +2643,14 @@ namespace ProgramPrognos
 
             read_exchangestudents(2023);
 
+            fill_triangledicts();
+
+            //fixa program som saknar data:
             foreach (string p in origprogramdict.Keys)
             {
+                origprogramdict[p].extendretention(0.7);
                 origprogramdict[p].set_homeinst();
+
                 if (origprogramdict[p].utype == "Program" && origprogramdict[p].homeinst != utaninst && origprogramdict[p].fracproddict.Count == 0)
                 {
                     if (origprogramdict[p].semesters > 1)
@@ -2635,6 +2674,26 @@ namespace ProgramPrognos
                         var pclone = programclass.clone(qprog);
                         origprogramdict[p].datafromtemplate(pclone);
                     }
+                }
+            }
+
+            Dictionary<string, Dictionary<string, double>> subjectpengdict = new Dictionary<string, Dictionary<string, double>>();
+
+            //fixa saknade studentpengar i kurser:
+            foreach (programclass pc in fkdict.Values)
+            {
+                if (pc.studentpengarea.Count > 0)
+                {
+                    if (!subjectpengdict.ContainsKey(pc.subjectcode))
+                        subjectpengdict.Add(pc.subjectcode, pc.studentpengarea);
+                }
+            }
+            foreach (programclass pc in fkdict.Values)
+            {
+                if (pc.studentpengarea.Count == 0)
+                {
+                    if (subjectpengdict.ContainsKey(pc.subjectcode))
+                        pc.studentpengarea = new Dictionary<string, double>(subjectpengdict[pc.subjectcode]);
                 }
             }
 
@@ -3790,6 +3849,598 @@ namespace ProgramPrognos
                     }
                     memo("");
                 }
+            }
+        }
+
+        public static Dictionary<string, string> trianglecolor = new Dictionary<string, string>()
+        {
+            {"Ekonomi och arbetsliv","#FF0000" },
+            {"Samhälle","#FF5500" },
+            {"Medier","#FF0055" },
+            {"Lärarutb","#FF8800" },
+            //{"IKS lärarutb","#FF8800" },
+            {"IKS resurs","#AA8800" },
+            {"Vård","#00FF00" },
+            {"Socionom","#55FF00" },
+            {"Idrott och hälsa","#00FF55" },
+            //{"IHOV lärarutb","#00FF88" },
+            {"Energi och bygg","#0000FF" },
+            {"Industri","#0000AA" },
+            {"Data och IT","#0055FF" },
+            {"IIT resurs","#0055AA" },
+            {"Språk","#FFFF00" },
+        };
+
+        public static Dictionary<string, string> progcolor = new Dictionary<string, string>()
+        {
+            {"Ekonomi och arbetsliv","#FF5555" },
+            {"Samhälle","#FFAA55" },
+            {"Medier","#FF55AA" },
+            {"Lärarutb","#FFCC55" },
+            //{"IKS lärarutb","#FFCC55" },
+            {"IKS resurs","#BB9955" },
+            {"Vård","#55FF55" },
+            {"Socionom","#99FF55" },
+            {"Idrott och hälsa","#55FF99" },
+            //{"IHOV lärarutb","#55FFAA" },
+            {"Energi och bygg","#5555FF" },
+            {"Industri","#3333AA" },
+            {"Data och IT","#5599FF" },
+            {"IIT resurs","#5599BB" },
+            {"Språk","#FFFF55" },
+        };
+
+        private Dictionary<string, string> triangleindex = new Dictionary<string, string>()
+        {
+
+{"LP","Medier"},
+{"SR","Vård"},
+{"ST","Data och IT"},
+{"MI","Data och IT"},
+{"IK","Data och IT"},
+{"DT","Data och IT"},
+{"NA","Ekonomi och arbetsliv"},
+{"SQ","Energi och bygg"},
+{"BY","Energi och bygg"},
+{"IE","Industri"},
+{"MA","IIT resurs"},
+{"FI","IKS resurs"},
+{"FÖ","Ekonomi och arbetsliv"},
+{"EU","Ekonomi och arbetsliv"},
+{"RV","Ekonomi och arbetsliv"},
+{"MT","Industri"},
+{"MD","IIT resurs"},
+{"EG","Energi och bygg"},
+{"PA","Ekonomi och arbetsliv"},
+{"ET","Industri"},
+{"FY","IIT resurs"},
+{"TR","Ekonomi och arbetsliv"},
+{"IH","Idrott och hälsa"},
+{"SO","Samhälle"},
+{"SK","Samhälle"},
+{"AB","Ekonomi och arbetsliv"},
+{"MÖ","Energi och bygg"},
+{"RY","Språk"},
+{"BQ","Medier"},
+{"BP","Medier"},
+{"EN","Språk"},
+{"PG","IKS lärarutb"},
+{"SV","Språk"},
+{"NV","IHOV lärarutb"},
+{"GT","Data och IT"},
+{"HI","IKS resurs"},
+{"SS","Språk"},
+{"KG","Ekonomi och arbetsliv"},
+{"AU","Medier"},
+{"MC","Vård"},
+{"MP","Industri"},
+{"RK","IKS resurs"},
+{"SA","Socionom"},
+{"VÅ","Vård"},
+{"PS","Socionom"},
+{"FR","Språk"},
+{"KT","Industri"},
+{"KE","IHOV lärarutb"},
+{"TY","Språk"},
+{"AR","Språk"},
+{"SP","Språk"},
+{"KI","Språk"},
+{"IT","Språk"},
+{"LI","Språk"},
+{"GG","IKS resurs"},
+{"JP","Språk"},
+{"PR","Språk"},
+{"Audiovisuell produktion","Medier"},
+{"Barnmorskeprogrammet","Vård"},
+{"Magisterpgm Business Intelligence","Data och IT"},
+{"Bygg- och samhällsplanerarprogrammet","Energi och bygg"},
+{"Byggarbetsledarprogrammet","Energi och bygg"},
+{"Byggingenjör","Energi och bygg"},
+{"Byggteknik - Produktion och förvaltning","Energi och bygg"},
+{"Masterprogram i Data Science","Data och IT"},
+{"Detaljhandelsprogrammet 180hp","Ekonomi och arbetsliv"},
+{"Detaljhandelprogrammet 120hp","Ekonomi och arbetsliv"},
+{"Digitalbrott och eSäkerhet","Data och IT"},
+{"Ekonomprogrammet","Ekonomi och arbetsliv"},
+{"Högskoleingenjör hållbara energisystem","Energi och bygg"},
+{"Energiteknikerprogrammet","Energi och bygg"},
+{"Entreprenöriellt företagande","Ekonomi och arbetsliv"},
+{"Film- och TV produktion","Medier"},
+{"Filmdesign för reklam och information","Medier"},
+{"Förskollärarprogrammet","IKS lärarutb"},
+{"Global sexuell och reproduktiv hälsa","Vård"},
+{"Grafisk design","IKS lärarutb"},
+{"Grundlärare Förskoleklass - årskurs 1-3","IKS lärarutb"},
+{"Grundlärare Grundskolans årskurs 4-6","IKS lärarutb"},
+{"Grundlärare årskurs 4-6 arbetsintegrerad","IKS lärarutb"},
+{"Grundlärare årskurs F-3 arbetsintegrerad","IKS lärarutb"},
+{"Idrottstränarpgm. m. inr mot prestation","Idrott och hälsa"},
+{"Idrottstränarpgm m. hälsoinriktning","Idrott och hälsa"},
+{"Industriell ekonomi - Högskoleexamen","Industri"},
+{"Industriell ekonomi","Industri"},
+{"Informationsdesign - kandidatprogram","Data och IT"},
+{"International Tourism Management","Ekonomi och arbetsliv"},
+{"IT säkerhet och mjukvarutestning","Data och IT"},
+{"Manus för film och TV","Medier"},
+{"Kompl lärarutb år 7-9","IKS lärarutb"},
+{"Kompl lärarutb gymnasiet","IKS lärarutb"},
+{"Kompl lärarutb yrkes år 7-9","IKS lärarutb"},
+{"Ljud- och musikproduktionsprogrammet","Medier"},
+{"Lärarprogrammet","IKS lärarutb"},
+{"Magisterpgm i Audiovisuella Studier","Medier"},
+{"Magisterpgm i destinationsutveckling","Ekonomi och arbetsliv"},
+{"Magisterpgm i Energieffektivt byggande","Energi och bygg"},
+{"Magisterpgm i engelska - lingvistik","Språk"},
+{"Magisterpgm i engelska - eng litteratur","Språk"},
+{"Magisterpgm i fysioterapi","Vård"},
+{"Magisterpgm i Företagsekonomi","Ekonomi och arbetsliv"},
+{"Magisterpgm Maskin/Materialteknik","Industri"},
+{"Magisterpgm i Nationalekonomi","Ekonomi och arbetsliv"},
+{"Magisterpgm  i religionsvetenskap","IKS resurs"},
+{"Magisterpgm i Pedagogiskt arbete","IKS lärarutb"},
+{"Magisterpgm i solenergiteknik","Energi och bygg"},
+{"Magisterpgm Svenska som andraspråk","Språk"},
+{"Magisterpgm Demokrati, medborgarskap och förändring","Samhälle"},
+{"Högskoleingenjör - Maskinteknik","Industri"},
+{"Master Business Intelligence","Data och IT"},
+{"Masterprogram i Materialteknik och Produktutveckling","Industri"},
+{"Masterprogram i solenergiteknik","Energi och bygg"},
+{"Musik- och ljuddesign","Medier"},
+{"Personal- och arbetslivsprogram","Ekonomi och arbetsliv"},
+{"Samhällsvetarprogrammet","Samhälle"},
+{"Sjuksköterskeprogrammet","Vård"},
+{"Socionomprogrammet","Socionom"},
+{"Spec.sjuksköterska - vård av äldre","Vård"},
+{"Spec.sjuksköterska - demensvård","Vård"},
+{"Spec.sjuksköterska - distriktsköterska","Vård"},
+{"Sport Management","Ekonomi och arbetsliv"},
+{"Systemvetenskapliga programmet","Data och IT"},
+{"Teknisk/Naturvetenskaplig bastermin","IIT resurs"},
+{"Tekniskt basår","IIT resurs"},
+{"Tränarprogrammet för hälsa och idrott","Idrott och hälsa"},
+{"Digitala tjänster 120 hp","Data och IT"},
+{"Vidareutbildning av lärare","IKS lärarutb"},
+{"Yrkeslärare","IKS lärarutb"},
+{"Ämneslärare - Grundskolans årskurs 7-9","IKS lärarutb"},
+{"Ämneslärare Gymnasieskolan","IKS lärarutb"},
+{"Upplevelseproduktion - friluftsliv, idrott och hälsa","Ekonomi och arbetsliv"},
+{"Produktionstekniker 120 hp","Industri"},
+{"Ekonomprogrammet - Business Management","Ekonomi och arbetsliv"},
+{"Masterprogram i interkulturella litteraturstudier","Språk"},
+{"Filmproduktion 180 hp","Medier"},
+{"Manus och producentskap 180 hp","Medier"},
+{"Medieproduktion för TV och sociala medier 180 hp","Medier"},
+{"Musik- och ljudproduktion 180 hp","Medier"},
+{"Statsvetenskap A - distans","Samhälle"},
+{"Statsvetenskap B - Distans","Samhälle"},
+{"Statsvetenskap C - Distans","Samhälle"},
+{"Spanska I","Språk"},
+{"Spanska II","Språk"},
+{"Svenska som andraspråk I","Språk"},
+{"Svenska som andraspråk II","Språk"},
+{"Portugisiska Grundläggande kurs I och II, 30hp","Språk"},
+{"Portugisiska I","Språk"},
+{"Portugisiska II","Språk"},
+{"Kinesiska I - Distans","Språk"},
+{"Kinesiska I - Distans, Kväll","Språk"},
+{"Kinesiska II - Distans","Språk"},
+{"Kinesiska II - Distans, Kväll","Språk"},
+{"Kinesiska III - Distans","Språk"},
+{"Kinesiska IV - Distans","Språk"},
+{"Franska I","Språk"},
+{"Franska II","Språk"},
+{"Franska IIIa - Fransk litteraturvetenskap","Språk"},
+{"Franska IIIb - Fransk grammatik och lingvistik","Språk"},
+{"Japanska I - Distans","Språk"},
+{"Japanska II - Distans","Språk"},
+{"Engelska II","Språk"},
+{"Tränare i styrkelyft - Kurspaket","Idrott och hälsa"},
+{"Judotränare  - Kurspaket","Idrott och hälsa"},
+{"Tyska I","Språk"},
+{"Tyska I, 50%","Språk"},
+{"Tyska II, 50%","Språk"},
+{"Tyska II","Språk"},
+{"Tyska III","Språk"},
+{"Tyska: Introduktionspaket I i Tyska","Språk"},
+{"Tyska: Introduktionspaket II i Tyska, 25%","Språk"},
+{"Kinesiska I: Vägen till Kina - Distans","Språk"},
+{"Tränare i klättring - Kurspaket","Idrott och hälsa"},
+{"Statsvetenskap III","Samhälle"},
+{"Energy for exchange students 2","Energi och bygg"},
+{"Japanska III - Distans","Språk"},
+{"Engelska I","Språk"},
+{"Statsvetenskap II - Distans","Samhälle"}
+
+
+        };
+
+
+
+        private void progsubjbutton_Click(object sender, EventArgs e)
+        {
+            Dictionary<string, Dictionary<string, double>> progsubjdict = new Dictionary<string, Dictionary<string, double>>();
+            List<string> subjectlist = new List<string>();
+
+            //Gather course data by subject:
+            foreach (programclass pc in origprogramdict.Values)
+            {
+                if (pc.coursedict.Count == 0)
+                    continue;
+                progsubjdict.Add(pc.name, new Dictionary<string, double>());
+                foreach (int i in pc.coursedict.Keys)
+                {
+                    foreach (string ccode in pc.coursedict[i].Keys)
+                    {
+                        string subj = fkcodedict[ccode].subjectcode;
+                        if (!subjectlist.Contains(subj))
+                            subjectlist.Add(subj);
+                        if (!progsubjdict[pc.name].ContainsKey(subj))
+                            progsubjdict[pc.name].Add(subj, pc.coursedict[i][ccode]);
+                        else
+                            progsubjdict[pc.name][subj] += pc.coursedict[i][ccode];
+                    }
+                }
+            }
+
+            //Make Sankey?
+
+            //Normalize:
+            foreach (var dd in progsubjdict.Values)
+            {
+                double sum = dd.Values.Sum();
+                if (sum == 0)
+                    continue;
+                foreach (string ccode in dd.Keys.ToList())
+                {
+                    dd[ccode] *= 100 / sum; // *100 to make percentage values
+                }
+            }
+
+            //Make Gephi input:
+
+            string fnnode = util.unusedfn(folder + @"\progsubjnodes.csv");
+            string fnedge = util.unusedfn(folder + @"\progsubjedges.csv");
+            string fnsubjnode = util.unusedfn(folder + @"\subjnodes.csv");
+            string fnsubjedge = util.unusedfn(folder + @"\subjedges.csv");
+
+
+            Dictionary<string, int> nodedict = new Dictionary<string, int>();
+            using (StreamWriter sw = new StreamWriter(fnnode))
+            using (StreamWriter sws = new StreamWriter(fnsubjnode))
+            {
+                memo("Writing " + fnnode);
+                memo("Writing " + fnsubjnode);
+                int inode = 0;
+                sw.WriteLine("Id;Label;Color");
+                sws.WriteLine("Id;Label;Color");
+                foreach (string subj in subjectlist)
+                {
+                    inode++;
+                    nodedict.Add(subj, inode);
+                    sw.WriteLine(inode + ";" + subj + ";"+trianglecolor[triangleindex[subj]]);
+                    sws.WriteLine(inode + ";" + subj + ";" + trianglecolor[triangleindex[subj]]);
+                }
+                foreach (string progname in progsubjdict.Keys)
+                {
+                    inode++;
+                    nodedict.Add(progname, inode);
+                    sw.WriteLine(inode + ";" + progname + ";" + trianglecolor[triangleindex[progname]]);
+                }
+            }
+
+            using (StreamWriter sw = new StreamWriter(fnedge))
+            {
+                memo("Writing " + fnedge);
+                sw.WriteLine("Source;Target;Weight");
+                foreach (string progname in progsubjdict.Keys)
+                {
+                    int iprog = nodedict[progname];
+                    foreach (string subj in progsubjdict[progname].Keys)
+                    {
+                        int isubj = nodedict[subj];
+                        int w = (int)Math.Round(progsubjdict[progname][subj]);
+                        if (w > 0)
+                            sw.WriteLine(iprog + ";" + isubj + ";" + w);
+                    }
+                }
+            }
+
+            using (StreamWriter sw = new StreamWriter(fnsubjedge))
+            {
+                memo("Writing " + fnsubjedge);
+                sw.WriteLine("Source;Target;Weight");
+                foreach (string progname in progsubjdict.Keys)
+                {
+                    int iprog = nodedict[progname];
+                    foreach (string subj in progsubjdict[progname].Keys)
+                    {
+                        int isubj = nodedict[subj];
+                        foreach (string subj2 in progsubjdict[progname].Keys)
+                        {
+                            if (subj == subj2)
+                                continue;
+                            int isubj2 = nodedict[subj2];
+                            if (isubj2 < isubj)
+                                continue;
+                            int w = (int)Math.Round(progsubjdict[progname][subj]*progsubjdict[progname][subj2]);
+                            if (w > 0)
+                                sw.WriteLine(isubj + ";" + isubj2 + ";" + w);
+                        }
+
+                    }
+                }
+            }
+
+        }
+
+        public static Dictionary<string, string> subjectriangle = new Dictionary<string, string>();
+        public static Dictionary<string, string> subjcodetriangle = new Dictionary<string, string>();
+        public static Dictionary<string, string> progtriangle = new Dictionary<string, string>();
+
+        private void fill_triangledicts()
+        {
+            if (subjectriangle.Count > 0)
+                return;
+
+            subjectriangle.Add("Bild", "Medier");
+            subjectriangle.Add("Pedagogiskt arbete", "Lärarutb");
+            subjectriangle.Add("Pedagogik", "Lärarutb");
+            subjectriangle.Add("Arbetsvetenskap", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Sociologi", "Samhälle");
+            subjectriangle.Add("Turismvetenskap", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Kulturgeografi", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Datateknik", "Data och IT");
+            subjectriangle.Add("Informatik", "Data och IT");
+            subjectriangle.Add("Mikrodataanalys", "Data och IT");
+            subjectriangle.Add("Statistik", "Data och IT");
+            subjectriangle.Add("Byggteknik", "Energi och bygg");
+            subjectriangle.Add("Energiteknik", "Energi och bygg");
+            subjectriangle.Add("Samhällsbyggnadsteknik", "Energi och bygg");
+            subjectriangle.Add("Filosofi", "IKS resurs");
+            subjectriangle.Add("Historia", "IKS resurs");
+            subjectriangle.Add("Religion", "IKS resurs");
+            subjectriangle.Add("Religionsvetenskap", "IKS resurs");
+            subjectriangle.Add("Statsvetenskap", "Samhälle");
+            subjectriangle.Add("Entreprenörsskap och innovationsteknik", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Entreprenörskap och innovationsteknik", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Fysik", "IIT resurs");
+            subjectriangle.Add("Industriell ekonomi", "Industri");
+            subjectriangle.Add("Maskinteknik", "Industri");
+            subjectriangle.Add("Elektroteknik", "Industri");
+            subjectriangle.Add("Matematik", "IIT resurs");
+            subjectriangle.Add("Materialteknik", "Industri");
+            subjectriangle.Add("Bildproduktion", "Medier");
+            subjectriangle.Add("Ljud- och musikproduktion", "Medier");
+            subjectriangle.Add("Företagsekonomi", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Nationalekonomi", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Rättsvetenskap", "Ekonomi och arbetsliv");
+            subjectriangle.Add("Omvårdnad", "Vård");
+            subjectriangle.Add("Arabiska", "Språk");
+            subjectriangle.Add("Franska", "Språk");
+            subjectriangle.Add("Italienska", "Språk");
+            subjectriangle.Add("Kinesiska", "Språk");
+            subjectriangle.Add("Portugisiska", "Språk");
+            subjectriangle.Add("Spanska", "Språk");
+            subjectriangle.Add("Engelska", "Språk");
+            subjectriangle.Add("Japanska", "Språk");
+            subjectriangle.Add("Ryska", "Språk");
+            subjectriangle.Add("Tyska", "Språk");
+            subjectriangle.Add("Svenska som andraspråk", "Språk");
+            subjectriangle.Add("Svenska språket", "Språk");
+            subjectriangle.Add("Svenska", "Språk");
+            subjectriangle.Add("Matematikdidaktik", "Lärarutb");
+            subjectriangle.Add("Naturvetenskap", "Lärarutb");
+            subjectriangle.Add("Idrott och hälsa", "Idrott och hälsa");
+            subjectriangle.Add("Idrotts- och hälsovetenskap", "Idrott och hälsa");
+            subjectriangle.Add("Medicinsk vetenskap", "Vård");
+            subjectriangle.Add("Sexuell, reproduktiv och perinatal hälsa", "Vård");
+            subjectriangle.Add("Socialt arbete", "Socionom");
+
+            progtriangle.Add("Digitala tjänster - program för högskoleexamen 120 hp", "Data och IT");
+            progtriangle.Add("Grafisk design och webbutveckling 180 hp", "Data och IT");
+            progtriangle.Add("IT säkerhet och mjukvarutestning 180 hp", "Data och IT");
+            progtriangle.Add("Masterprogram i Data Science 120 hp", "Data och IT");
+            progtriangle.Add("Systemvetenskapliga programmet 180 hp", "Data och IT");
+            progtriangle.Add("Ekonomprogrammet - Business Management 180 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Ekonomprogrammet 180 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Entreprenöriellt företagande 120 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("International Tourism Management 180 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterprogram Business Intelligence 60 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterprogram i destinationsutveckling 60 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterprogram i Företagsekonomi 60 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterprogram i Nationalekonomi 60 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Personal- och arbetslivsprogram 180 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Sport Management 180 hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Bygg- och samhällsplanerarprogrammet 180 hp", "Energi och bygg");
+            progtriangle.Add("Byggingenjör 180 hp", "Energi och bygg");
+            progtriangle.Add("Byggteknik - Produktion och förvaltning 120 hp", "Energi och bygg");
+            progtriangle.Add("Energiteknik - Högskoleingenjör 180 hp", "Energi och bygg");
+            progtriangle.Add("Magisterprogram i Energieffektivt byggande 60 hp", "Energi och bygg");
+            progtriangle.Add("Magisterprogram i solenergiteknik 60 hp", "Energi och bygg");
+            progtriangle.Add("Masterprogram i solenergiteknik 120 hp", "Energi och bygg");
+            progtriangle.Add("Tränarprogrammet för hälsa och idrott 180 hp", "Idrott och hälsa");
+            progtriangle.Add("Upplevelseproduktion - friluftsliv, idrott och hälsa 180 hp", "Idrott och hälsa");
+            progtriangle.Add("Tekniskt basår 30 hp", "IIT resurs");
+            progtriangle.Add("Tekniskt basår 60 hp", "IIT resurs");
+            progtriangle.Add("Ämneslärare - Grundskolans årskurs 7-9 240 hp", "Lärarutb");
+            progtriangle.Add("Ämneslärare - Grundskolans årskurs 7-9 270 hp", "Lärarutb");
+            progtriangle.Add("Ämneslärare Gymnasieskolan 330 hp", "Lärarutb");
+            progtriangle.Add("Grundlärare årskurs 4-6 arbetsintegrerad 240 hp", "Lärarutb");
+            progtriangle.Add("Grundlärare årskurs F-3 arbetsintegrerad 240 hp", "Lärarutb");
+            progtriangle.Add("Grundlärare Förskoleklass - årskurs 1-3 240 hp", "Lärarutb");
+            progtriangle.Add("Grundlärare Grundskolans årskurs 4-6 240 hp", "Lärarutb");
+            progtriangle.Add("Kompl lärarutb år 7-9 90 hp", "Lärarutb");
+            progtriangle.Add("Kompl lärarutb gymnasiet 90 hp", "Lärarutb");
+            progtriangle.Add("Magisterprogram i Pedagogiskt arbete 60 hp", "Lärarutb");
+            progtriangle.Add("Vidareutbildning av lärare 330 hp", "Lärarutb");
+            progtriangle.Add("Yrkeslärare 90 hp", "Lärarutb");
+            progtriangle.Add("Industriell ekonomi - Högskoleexamen 120 hp", "Industri");
+            progtriangle.Add("Produktionsteknikerprogrammet 120 hp", "Industri");
+            progtriangle.Add("Audiovisuell produktion 180 hp", "Medier");
+            progtriangle.Add("Film- och TV produktion 180 hp", "Medier");
+            progtriangle.Add("Filmproduktion för reklam och information - kandidatprogram 180 hp", "Medier");
+            progtriangle.Add("Ljud- och musikproduktionsprogrammet 180 hp", "Medier");
+            progtriangle.Add("Magisterprogram i Audiovisuella Studier 60 hp", "Medier");
+            progtriangle.Add("Manus för film och TV 180 hp", "Medier");
+            progtriangle.Add("Musik- och ljuddesign 120 hp", "Medier");
+            progtriangle.Add("Magisterprogram Demokrati, medborgarskap och förändring 60 hp", "Samhälle");
+            progtriangle.Add("Samhällsvetarprogrammet 180 hp", "Samhälle");
+            progtriangle.Add("Socionomprogrammet 210 hp", "Socionom");
+            progtriangle.Add("Magisterpgm Svenska som andraspråk 60 hp", "Språk");
+            progtriangle.Add("Magisterprogram i engelska - engelskspråkig litteratur 60 hp", "Språk");
+            progtriangle.Add("Magisterprogram i engelska - lingvistik 60 hp", "Språk");
+            progtriangle.Add("Masterprogram i interkulturella litteraturstudier 120 hp", "Språk");
+            progtriangle.Add("Barnmorskeprogrammet 90 hp", "Vård");
+            progtriangle.Add("Global sexuell och reproduktiv hälsa 60 hp", "Vård");
+            progtriangle.Add("Magisterprogram i fysioterapi 60 hp", "Vård");
+            progtriangle.Add("Sjuksköterskeprogrammet 180 hp", "Vård");
+            progtriangle.Add("Spec.sjuksköterska - demensvård 60 hp", "Vård");
+            progtriangle.Add("Spec.sjuksköterska - distriktsköterska 75 hp", "Vård");
+            progtriangle.Add("Spec.sjuksköterska - vård av äldre 60 hp", "Vård");
+
+            subjcodetriangle.Add("VÅ", "Vård");
+            subjcodetriangle.Add("VV", "Vård");
+            subjcodetriangle.Add("MC", "Vård");
+            subjcodetriangle.Add("IH", "Idrott och hälsa");
+            subjcodetriangle.Add("SR", "Vård");
+            subjcodetriangle.Add("SA", "Socionom");
+            subjcodetriangle.Add("MI", "Data och IT");
+            subjcodetriangle.Add("IK", "Data och IT");
+            subjcodetriangle.Add("ST", "Data och IT");
+            subjcodetriangle.Add("EG", "Energi och bygg");
+            subjcodetriangle.Add("MT", "Industri");
+            subjcodetriangle.Add("BY", "Energi och bygg");
+            subjcodetriangle.Add("DT", "Data och IT");
+            subjcodetriangle.Add("ET", "Industri");
+            subjcodetriangle.Add("EU", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("IE", "Industri");
+            subjcodetriangle.Add("SK", "Samhälle");
+            subjcodetriangle.Add("AB", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("SO", "Samhälle");
+            subjcodetriangle.Add("TR", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("FÖ", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("RK", "IKS resurs");
+            subjcodetriangle.Add("HI", "IKS resurs");
+            subjcodetriangle.Add("RV", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("NA", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("LP", "Medier");
+            subjcodetriangle.Add("FI", "IKS resurs");
+            subjcodetriangle.Add("BP", "Medier");
+            subjcodetriangle.Add("PE", "Lärarutb");
+            subjcodetriangle.Add("PG", "Lärarutb");
+            subjcodetriangle.Add("NV", "Lärarutb");
+            subjcodetriangle.Add("MD", "Lärarutb");
+            subjcodetriangle.Add("AR", "Språk");
+            subjcodetriangle.Add("JP", "Språk");
+            subjcodetriangle.Add("SS", "Språk");
+            subjcodetriangle.Add("SP", "Språk");
+            subjcodetriangle.Add("IT", "Språk");
+            subjcodetriangle.Add("FR", "Språk");
+            subjcodetriangle.Add("LI", "Språk");
+            subjcodetriangle.Add("SV", "Språk");
+            subjcodetriangle.Add("TY", "Språk");
+            subjcodetriangle.Add("EN", "Språk");
+            subjcodetriangle.Add("PR", "Språk");
+            subjcodetriangle.Add("RY", "Språk");
+            subjcodetriangle.Add("KI", "Språk");
+            subjcodetriangle.Add("FY", "IIT resurs");
+            subjcodetriangle.Add("MA", "IIT resurs");
+            subjcodetriangle.Add("KE", "IIT resurs");
+            subjcodetriangle.Add("BQ", "Medier");
+            subjcodetriangle.Add("PA", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("PS", "Samhälle");
+            subjcodetriangle.Add("AS", "IKS resurs");
+            subjcodetriangle.Add("AU", "Medier");
+            subjcodetriangle.Add("BI", "Lärarutb");
+            subjcodetriangle.Add("MÖ", "Energi och bygg");
+            subjcodetriangle.Add("GT", "Data och IT");
+            subjcodetriangle.Add("KG", "Ekonomi och arbetsliv");
+            subjcodetriangle.Add("KT", "IIT resurs");
+            subjcodetriangle.Add("MP", "Industri");
+            subjcodetriangle.Add("SQ", "Energi och bygg");
+
+        }
+        private void resapplbutton_Click(object sender, EventArgs e)
+        {
+            Dictionary<string, double> fkacc = new Dictionary<string, double>();
+            Dictionary<string, double> fkres = new Dictionary<string, double>();
+            Dictionary<string, double> progacc = new Dictionary<string, double>();
+            Dictionary<string, double> progres = new Dictionary<string, double>();
+
+            fill_triangledicts();
+
+            string fn = @"C:\Users\lsj\OneDrive - Högskolan Dalarna\Dokument\Invärld\Utbildningskonsolidering 2024\Reserver per antagen Johan 1flik.txt";
+            using (StreamReader sr = new StreamReader(fn))
+            {
+                sr.ReadLine();
+                while (!sr.EndOfStream)
+                {
+                    string line = sr.ReadLine();
+                    string[] words = line.Split('\t');
+                    bool fkprog = (words[1] == "fk");
+                    string triangle;
+                    if (fkprog)
+                        triangle = subjectriangle[words[2]];
+                    else
+                        triangle = progtriangle[words[2]];
+                    if (!fkacc.ContainsKey(triangle))
+                    {
+                        fkacc.Add(triangle, 0);
+                        fkres.Add(triangle, 0);
+                        progacc.Add(triangle, 0);
+                        progres.Add(triangle, 0);
+                    }
+
+                    double acc = util.tryconvert(words[3]);
+                    double res = util.tryconvert(words[4]);
+
+                    if (fkprog)
+                    {
+                        fkacc[triangle] += acc;
+                        fkres[triangle] += res;
+                    }
+                    else
+                    {
+                        progacc[triangle] += acc;
+                        progres[triangle] += res;
+                    }
+                }
+            }
+
+            memo("triangel,fkresacc,progresacc");
+            foreach (string tri in fkacc.Keys)
+            {
+                double fkresacc = fkacc[tri] > 0 ? fkres[tri] / fkacc[tri] : 0;
+                double progresacc = progacc[tri] > 0 ? progres[tri] / progacc[tri] : 0;
+                memo(tri + "," + fkresacc.ToString("N2", CultureInfo.InvariantCulture) + "," + progresacc.ToString("N2", CultureInfo.InvariantCulture));
+            }
+
+            memo("triangel\tfkresacc\tprogresacc\tfkacc\tprogacc");
+            foreach (string tri in fkacc.Keys)
+            {
+                double fkresacc = fkacc[tri] > 0 ? fkres[tri] / fkacc[tri] : 0;
+                double progresacc = progacc[tri] > 0 ? progres[tri] / progacc[tri] : 0;
+                memo(tri + "\t" + fkresacc.ToString("N2") + "\t" + progresacc.ToString("N2")+"\t"+fkacc[tri]+"\t"+progacc[tri]);
             }
         }
     }

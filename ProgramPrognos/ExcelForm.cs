@@ -45,7 +45,7 @@ namespace ProgramPrognos
             {
                 LBinst.Items.Add(inst);
             }
-            //LBinst.Items.Add("Gemensam prognosfil");
+            LBinst.Items.Add(Form1.hda);
             //this.Visible = true;
             //this.Refresh();
         }
@@ -177,6 +177,7 @@ namespace ProgramPrognos
         Dictionary<string, int> rethd;
         Dictionary<string, int> coursehd;
         Dictionary<string, int> sumhd;
+        Dictionary<string, int> triangelhd;
         Dictionary<string, int> progkurshd;
         Dictionary<string, int> fksumrow;
         int retoffset = 5;
@@ -184,6 +185,7 @@ namespace ProgramPrognos
         int progoffset = 2;
         int progkursoffset = 3;
         int sumoffset = 6;
+        int triangeloffset = 8;
         string acceptstring = "Antas slut ";
         string acceptu1string = "Antas U1 ";
         string acceptu2string = "Antas U2 ";
@@ -207,6 +209,7 @@ namespace ProgramPrognos
         string paysheetname = "Betalande stud";
         string paketsheetname = "Kurspaket";
         string sumsheetname = "Summa";
+        string triangelsheetname = "Trianglar";
         string progkurssheetname = "Prog-kurs";
         Dictionary<int, string> progkurssheetnames = new Dictionary<int, string>();
         string applstring = "1:ahand ";
@@ -442,7 +445,7 @@ namespace ProgramPrognos
                     {
                         int colhst = plan2hd[hststring + "20" + year] + 1;
                         int colhpr = plan2hd[hprstring + "20" + year] + 1;
-                        if (pc.name.StartsWith("Nytt "))
+                        if (pc.name.StartsWith("Nytt ") || pc.coursedict.Count == 0)
                         {
                             // OLD ALGORITHM, used for new programs:
                             sheet.Cells[row, colyear].Formula = toreplace + "=" + hstpeng + "*'" + detailsheetname + "'!" + Cellname(row, colhst) + "+" + hprpeng + "*'" + detailsheetname + "'!" + Cellname(row, colhpr);
@@ -469,15 +472,18 @@ namespace ProgramPrognos
                         lastcolwithdata = col;
                     if (pc.fk)
                     {
-                        //double hst = pc.totalprod.frachst;
-                        //double hst = pc.fracproddict[inst].frachst*pc.totalprod.frachst;
-                        string uo = Form1.utbomrdict[pc.name];
-                        int year = util.yearfromsem(sem);
-                        string hd = hststring + fkstring + uo + " " + year;
-                        string f = toreplace + "=0,5*'" + coursesheetname + "'!" + Cellname(2, coursehd[hd]+1);
-                        sheet.Cells[row, col].Formula = f;
-                        phtstart[pc.name] = true;
-                        pvtstart[pc.name] = true;
+                        if (!pc.name.Contains("från mediaområdet")) //blir dubbelräknat om de tas med
+                        {
+                            //double hst = pc.totalprod.frachst;
+                            //double hst = pc.fracproddict[inst].frachst*pc.totalprod.frachst;
+                            string uo = Form1.utbomrdict[pc.name];
+                            int year = util.yearfromsem(sem);
+                            string hd = hststring + fkstring + uo + " " + year;
+                            string f = toreplace + "=0,5*'" + coursesheetname + "'!" + Cellname(2, coursehd[hd] + 1);
+                            sheet.Cells[row, col].Formula = f;
+                            phtstart[pc.name] = true;
+                            pvtstart[pc.name] = true;
+                        }
                     }
                     else
                     {
@@ -494,7 +500,7 @@ namespace ProgramPrognos
                     }
                     sem = util.incrementsemester(sem);
                 }
-                while (sem != util.shiftsemester(lastsemwithdata,2));
+                while (sem != util.shiftsemester(lastsemwithdata,14));
 
                 if (specialinputdict.ContainsKey(pc.name))
                 {
@@ -510,9 +516,10 @@ namespace ProgramPrognos
             }
             //sheet.Range["B2", Cellname(qprog.Count + 1, allmaxsem + 2)].NumberFormat = "###.0%";
             //sheet.Cells[1, 1].Locked = false;
-            sheet.Range["B2", Cellname(qprog.Count + 7, 17)].NumberFormat = "### ### ###";
-            sheet.Range["B2", Cellname(qprog.Count + 3, 6)].Interior.Color = Excel.XlRgbColor.rgbLightPink;
-            for (int i = 2; i < 7; i++)
+            int endkrcol = endyear - startyear + 2;
+            sheet.Range["B2", Cellname(qprog.Count + 7, endkrcol)].NumberFormat = "### ### ###";
+            sheet.Range["B2", Cellname(qprog.Count + 3, endkrcol)].Interior.Color = Excel.XlRgbColor.rgbLightPink;
+            for (int i = 2; i <= endkrcol; i++)
             {
                 Excel.Range qa = sheet.Columns[i];
                 qa.ColumnWidth = 15;
@@ -1083,7 +1090,8 @@ namespace ProgramPrognos
                 //coursesheet.Cells[nrow, moneycol].Value = krhst;
                 krhstsum += krhst;
                 ncourses++;
-                double krstud = krhst * cc.hp / 60 * Form1.get_pengindex(year);
+                double hpfix = cc.hp > 0 ? cc.hp : 7.5;
+                double krstud = krhst * hpfix / 60 * Form1.get_pengindex(year);
                 krstuddict.Add(cc.bestcode(), krstud);
 
                 coderow.Add(cc.bestcode(), row);
@@ -1179,7 +1187,7 @@ namespace ProgramPrognos
 
             foreach (programclass pc in qprog)
             {
-                if (pc.homeinst == Form1.utaninst)
+                if (pc.homeinst == Form1.utaninst)// && !(inst==Form1.hda))
                     continue;
                 int row = rrow[sheet.Name][pc.name];
                 for (int year = startyear; year <= endyear; year++)
@@ -1592,6 +1600,133 @@ namespace ProgramPrognos
 
             //sheet.FreezeColumns(1);
             //sheet.Protect();
+        }
+
+        private void TriangelSheet(Excel.Worksheet triangelsheet, string startsem, string endsem)
+        {
+            triangelhd = new Dictionary<string, int>() { { "Triangel/ämne", 0 } };
+
+            int startyear = 2000 + util.semtoint(startsem);
+            int endyear = 2000 + util.semtoint(endsem);
+            int col = triangelhd.Count;
+
+            for (int i = startyear; i <= endyear; i++)
+            {
+                triangelhd.Add(moneystring + i, col);
+                col++;
+            }
+
+            for (int i = startyear; i <= endyear; i++)
+            {
+                triangelhd.Add(moneystring + fkstring + i, col);
+                col++;
+            }
+
+            for (int i = startyear; i <= endyear; i++)
+            {
+                triangelhd.Add(moneystring + progstring + i, col);
+                col++;
+            }
+
+            int totalrow = 4;
+            int takbelopprow = 2;
+            int diffrow = 3;
+
+            List<string> triangles = Form1.trianglecolor.Keys.ToList();
+
+            SheetWithHeader(triangelsheet, triangles.Count + Form1.subjcodetriangle.Count + triangeloffset, triangelhd);
+
+            int subjstartrow = totalrow + triangles.Count + 4;
+            int subjtotalrow = subjstartrow - 1;
+            int srow = subjstartrow;
+            Dictionary<string, int> subjrowdict = new Dictionary<string, int>();
+
+            for (int i=2;i<=triangelhd.Count;i++)
+            {
+                triangelsheet.Cells[subjstartrow - 2, i] = triangelsheet.Cells[1, i];
+            }
+            foreach (string subj in Form1.subjcodetriangle.Keys)
+            {
+                triangelsheet.Cells[srow, 1] = subj;
+                subjrowdict.Add(subj, srow);
+
+                for (int i = startyear; i <= endyear; i++)
+                {
+                    string kr = moneystring + i;
+                    string krfk = moneystring + fkstring + i;
+                    string krprog = moneystring + progstring + i;
+
+                    int fkrow = fksumrow[subj];
+
+                    triangelsheet.Cells[srow, triangelhd[kr] + 1] = toreplace + "=" +
+                        Cellname(srow, triangelhd[krfk] + 1) + "+" +
+                        Cellname(srow, triangelhd[krprog] + 1);
+
+                    triangelsheet.Cells[srow, triangelhd[krfk] + 1] = toreplace + "=0,001*'" +
+                        coursesheetname + "'!" + Cellname(fksumrow[subj], coursehd[krfk] + 1);
+                    triangelsheet.Cells[srow, triangelhd[krprog] + 1] = toreplace + "=0,001*'" +
+                        coursesheetname + "'!" + Cellname(fksumrow[subj], coursehd[krprog] + 1);
+                }
+
+                srow++;
+            }
+
+            int trow = totalrow + 1;
+            foreach (string tri in triangles)
+            {
+                triangelsheet.Cells[trow, 1] = tri;
+                List<string> subjlist = (from c in Form1.subjcodetriangle where c.Value == tri select c.Key).ToList();
+                for (int i = 2; i <= triangelhd.Count; i++)
+                {
+                    StringBuilder sb = new StringBuilder(toreplace + "=");
+                    string plus = "";
+                    foreach (string subj in subjlist)
+                    {
+                        sb.Append(plus + Cellname(subjrowdict[subj], i));
+                        plus = "+";
+                    }
+                    triangelsheet.Cells[trow, i] = sb.ToString();
+                }
+
+                trow++;
+            }
+
+            triangelsheet.Cells[totalrow, 1] = "Total";
+            triangelsheet.Rows[totalrow].Font.Bold = true;
+            triangelsheet.Cells[takbelopprow, 1] = "Takbelopp";
+            triangelsheet.Cells[diffrow, 1] = "Över/underproduktion";
+            triangelsheet.Cells[subjtotalrow, 1] = "Total";
+            triangelsheet.Rows[subjtotalrow].Font.Bold = true;
+
+            for (int i=startyear;i<=endyear;i++)
+            {
+                if (!Form1.takbelopp.ContainsKey(i))
+                    continue;
+                string kr = moneystring + i;
+                int col1 = triangelhd[kr] + 1;
+                triangelsheet.Cells[takbelopprow, col1].Value = Form1.takbelopp[i];
+                triangelsheet.Cells[diffrow, col1] = toreplace + "=" + Cellname(totalrow, col1) + "-" + Cellname(takbelopprow, col1);
+            }
+
+            for (int i = 2; i <= triangelhd.Count; i++)
+            {
+                triangelsheet.Cells[totalrow, i] = toreplace + "=SUM(" + Cellname(totalrow + 1, i) + ":" + Cellname(trow - 1, i) + ")";
+                triangelsheet.Cells[subjtotalrow, i] = toreplace + "=SUM(" + Cellname(subjtotalrow + 1, i) + ":" + Cellname(srow - 1, i) + ")";
+
+                Excel.Range qa = triangelsheet.Columns[i];
+                qa.ColumnWidth = 11;
+                qa.NumberFormat = "# ###";
+                if (triangelsheet.Cells[1,i].Value.ToString().Contains("prog"))
+                    qa.Interior.Color = Excel.XlRgbColor.rgbPink;
+                else if (triangelsheet.Cells[1, i].Value.ToString().Contains("FK"))
+                    qa.Interior.Color = Excel.XlRgbColor.rgbLightPink;
+                else
+                    qa.Interior.Color = Excel.XlRgbColor.rgbMistyRose;
+            }
+            Excel.Range qb = triangelsheet.Rows[trow];
+            qb.Interior.Color = Excel.XlRgbColor.rgbWhite;
+
+
         }
 
         private void SumSheet(Excel.Worksheet sumsheet, List<programclass> qprog, string startsem, string endsem)
@@ -2248,7 +2383,7 @@ namespace ProgramPrognos
             int srow = lastnewcourseline + 2;
             int subjcol = moneycol - 3;
             coursesheet.Cells[srow, subjcol] = "Summerat per ämne";
-            coursesheet.Cells[srow, subjcol + 2] = "Prog+" + coursesheet.Cells[1, moneycol + 3].Value;
+            //coursesheet.Cells[srow, subjcol + 2] = "Prog+" + coursesheet.Cells[1, moneycol + 3].Value;
             for (int i = subjcol + 4; i <= coursehd.Count; i++)
                 coursesheet.Cells[srow, i] = coursesheet.Cells[1, i];
             string coderange = Cellname(totalrow + 1, codecol + 1) + ":" + Cellname(lastnewcourseline, codecol + 1);
@@ -2259,7 +2394,7 @@ namespace ProgramPrognos
                 coursesheet.Cells[srow, subjcol+1] = subj;
                 for (int i = subjcol+4; i <= coursehd.Count; i++)
                     coursesheet.Cells[srow, i] = toreplace + "=SUMIF(" + coderange + ";" + Cellname(srow, subjcol+1) + ";" + Cellname(totalrow + 1, i) + ":" + Cellname(lastnewcourseline, i) + ")";
-                coursesheet.Cells[srow,subjcol+2] = toreplace + "=" + Cellname(srow, moneycol + 3) + "+" + Cellname(srow, moneycol+8);
+                //coursesheet.Cells[srow,subjcol+2] = toreplace + "=" + Cellname(srow, moneycol + 3) + "+" + Cellname(srow, moneycol+8);
                 //coursesheet.Cells[srow, subjcol+3] = toreplace + "=" + Cellname(srow, instcol + 4) + "+" + Cellname(srow, instcol + 6);
             }
 
@@ -3230,8 +3365,14 @@ namespace ProgramPrognos
             if (!Directory.Exists(folder))
                 Directory.CreateDirectory(folder);
 
-            int startyear = 2022;
-            int endyear = 2026;
+            int startyear = 2023;
+            int endyear = 2030;
+            int sy = util.tryconvert(TBstartyear.Text);
+            if (sy > 0)
+                startyear = sy;
+            int ey = util.tryconvert(TBendyear.Text);
+            if (ey > 0)
+                endyear = ey;
             string startsem = "VT" + startyear % 100;
             string endsem = "HT" + endyear % 100;
 
@@ -3239,13 +3380,17 @@ namespace ProgramPrognos
             Dictionary<string, Excel.Workbook> xldict = new Dictionary<string, Excel.Workbook>();
             Dictionary<string, Dictionary<string, Excel.Worksheet>> sheetdictdict = new Dictionary<string, Dictionary<string, Excel.Worksheet>>();
 
-            foreach (string inst in Form1.institutiondict.Keys)
+            List<string> instlist = Form1.institutiondict.Keys.ToList();
+            instlist.Add(Form1.hda);
+
+            foreach (string inst in instlist)
             {
                 fninst.Add(inst, util.unusedfn(folder + "HST-planering " + Form1.instshortdict[inst] +" "+util.yymmdd()+" "+DateTime.Now.ToString("hh.mm")+" .xlsx"));
                 Excel.Workbook xl = xlApp.Workbooks.Add();
                 xldict.Add(inst, xl);
                 sheetdictdict.Add(inst, new Dictionary<string, Excel.Worksheet>());
             }
+
 
 
             int ncat = 0;
@@ -3293,7 +3438,7 @@ namespace ProgramPrognos
 
                 var qpaket = (from c in Form1.origprogramdict
                          where c.Value.utype == "Kurspaket"
-                         where c.Value.homeinst == inst
+                         where c.Value.homeinst == inst || inst == Form1.hda
                          select c.Value).ToList();
 
                 int nprog = qprog.Count;
@@ -3438,9 +3583,9 @@ namespace ProgramPrognos
                 //AddExcelTabDiva(xldict[auinst], sheetdictdict[auinst], auinstpubdict, auinst, sheetnames, maxcount, auinst);
 
                 List<programclass> qcourse;
-                qcourse = (from c in Form1.fkdict 
-                           where c.Value.activecourse 
-                           where c.Value.homeinst == inst 
+                qcourse = (from c in Form1.fkdict
+                           where c.Value.activecourse
+                           where c.Value.homeinst == inst || inst == Form1.hda
                            select c.Value).OrderBy(c=>c.subjectcode).ThenBy(c=>c.name).ToList();
                 memo("# courses = " + qcourse.Count());
                 int newcourses = 20;
@@ -3523,6 +3668,14 @@ namespace ProgramPrognos
 
                 memo(mainsheet.Name);
                 PlanSheet_FKrows(mainsheet, qprog, startsem, endsem, inst);
+
+                if (CBtriangel.Checked)
+                {
+                    Excel.Worksheet triangelsheet = xldict[inst].Sheets.Add();
+                    triangelsheet.Name = triangelsheetname;
+                    memo(triangelsheet.Name);
+                    TriangelSheet(triangelsheet, startsem, endsem);
+                }
 
                 //mainsheet.Select();
 
@@ -4074,6 +4227,140 @@ namespace ProgramPrognos
 
             memo("==== DONE ====");
 
+
+        }
+
+        public string clean_utbnamn(string un)
+        {
+            int maxlen = 40;
+            if (un.Length <= maxlen)
+                return un.Trim();
+            return un.Substring(0, maxlen).Trim();
+        }
+
+        List<CSNpostclass> CSNlist = new List<CSNpostclass>();
+        private void omstallningbutton_Click(object sender, EventArgs e)
+        {
+            Excel.Application oXL;
+            //Excel.Workbook oWB;
+
+            oXL = new Excel.Application();
+
+            string username = Environment.UserName;
+            memo(username);
+            string fnapp = @"C:\Users\"+username+@"\OneDrive - Högskolan Dalarna\Dokument\Närvärld\UKÄ - Omställningsstudiestöd, antal sökande, sökt lärosäte och utbildning 2024-10-08.xlsx";
+            string fnacc = @"C:\Users\"+username+@"\OneDrive - Högskolan Dalarna\Dokument\Närvärld\UKÄ - Omställningsstudiestöd, antal beviljade personer med skola och utbildningar 2024-10-08.xlsx";
+
+            oXL.Workbooks.Open(fnapp);
+            oXL.Workbooks.Open(fnacc);
+
+            foreach (var wb in oXL.Workbooks)
+            {
+                memo(((Excel.Workbook)wb).Title);
+            }
+            foreach (Excel.Worksheet ws in oXL.Workbooks[1].Sheets)
+            {
+                string uni = ws.Name.Trim('_');
+                memo(uni);
+                int n = 0;
+                for (int i = 5; i < 400; i++)
+                {
+                    string s = ws.Cells[i, 1].Value.ToString();
+                    if (s.StartsWith("Total"))
+                        break;
+                    if (!s.StartsWith("Ansök"))
+                        continue;
+                    n++;
+                    string sok = s.Replace("Ansökanstillfälle ", "").Replace("Ansökningstillfälle ", "");
+                    string kod = ws.Cells[i, 3].Value.ToString();
+                    string utbnamn = clean_utbnamn(ws.Cells[i, 4].Value.ToString());
+                    int nstud = Convert.ToInt32(ws.Cells[i, 5].Value);
+
+                    CSNpostclass pc = new CSNpostclass();
+                    pc.uni = uni;
+                    pc.appldate = sok;
+                    pc.name = utbnamn;
+                    pc.applicants = nstud;
+                    pc.code = kod;
+
+                    CSNlist.Add(pc);
+                }
+                memo(n.ToString());
+            }
+
+            foreach (Excel.Worksheet ws in oXL.Workbooks[2].Sheets)
+            {
+                string uni = ws.Name.Trim('_');
+                memo(uni);
+                int n = 0;
+                int nnf = 0;
+                for (int i = 5; i < 400; i++)
+                {
+                    string s = ws.Cells[i, 1].Value.ToString();
+                    if (s.StartsWith("Total"))
+                        break;
+                    if (!s.StartsWith("Ansök"))
+                        continue;
+                    n++;
+                    string sok = s.Replace("Ansökanstillfälle ", "").Replace("Ansökningstillfälle ", "");
+                    //if (sok.EndsWith("2022"))
+                    //    continue;
+                    string kod = ws.Cells[i, 3].Value.ToString();
+                    string utbnamn = clean_utbnamn(ws.Cells[i, 4].Value.ToString());
+                    int nstud = Convert.ToInt32(ws.Cells[i, 5].Value);
+
+                    var qc = from c in CSNlist
+                             where c.uni == uni
+                             where c.appldate == sok
+                             where c.name == utbnamn
+                             where c.code == kod
+                             select c;
+                    if (qc.Count() == 1)
+                    {
+                        CSNpostclass pc = qc.First();
+                        pc.accepted = nstud;
+                    }
+                    else
+                    {
+                        CSNpostclass pc = new CSNpostclass();
+                        pc.uni = uni;
+                        pc.appldate = sok;
+                        pc.name = utbnamn;
+                        pc.accepted = nstud;
+                        pc.code = kod;
+
+                        CSNlist.Add(pc);
+
+                        nnf++;
+                    }
+
+
+                }
+                memo(n.ToString());
+                memo("not found " + nnf);
+            }
+
+            foreach (Excel.Workbook wb in oXL.Workbooks)
+            {
+                memo(((Excel.Workbook)wb).Title);
+                wb.Close();
+                Marshal.ReleaseComObject(wb);
+            }
+            //quit and release
+            oXL.Quit();
+            Marshal.ReleaseComObject(oXL);
+
+            memo("appldate");
+            foreach (string s in (from c in CSNlist select c.appldate).Distinct())
+                memo(s);
+
+            memo("code");
+            foreach (string s in (from c in CSNlist select c.code).Distinct())
+                memo(s);
+
+            memo("name");
+            foreach (string s in (from c in CSNlist select c.name).Distinct())
+                memo(s);
 
         }
     }
