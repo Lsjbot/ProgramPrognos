@@ -32,6 +32,7 @@ namespace ProgramPrognos
         public static Dictionary<string, string> instshortdict = new Dictionary<string, string>();
         public static Dictionary<string, string> shortinstdict = new Dictionary<string, string>();
         public static Dictionary<string, string> subjinstdict = new Dictionary<string, string>(); // from coursecode subjects to institutions
+        public static Dictionary<string, string> subjnamedict = new Dictionary<string, string>(); // from coursecode subjects to subject name
         public static bool scenarioloaded = false;
 
         public static Dictionary<string,programclass> fkdict = new Dictionary<string,programclass>();
@@ -239,7 +240,7 @@ namespace ProgramPrognos
             subjinstdict.Add("KE", "IIT");
             subjinstdict.Add("KG", "IKS");
             subjinstdict.Add("KI", "ISLL");
-            subjinstdict.Add("KT", "?");
+            subjinstdict.Add("KT", "IIT");
             subjinstdict.Add("LI", "ISLL");
             subjinstdict.Add("LP", "IKS");
             subjinstdict.Add("MA", "IIT");
@@ -276,6 +277,66 @@ namespace ProgramPrognos
             subjinstdict.Add("", hda);
             subjinstdict.Add("XX", hda);
 
+            subjnamedict.Add("VÅ", "Omvårdnad");
+            subjnamedict.Add("VV", "Vårdvetenskap");
+            subjnamedict.Add("MC", "Medicinsk vetenskap");
+            subjnamedict.Add("IH", "Idrott och hälsa");
+            subjnamedict.Add("SR", "Sexuell, reproduktiv och perinatal hälsa");
+            subjnamedict.Add("SA", "Socialt arbete");
+            subjnamedict.Add("MI", "Mikrodata");
+            subjnamedict.Add("IK", "Informatik");
+            subjnamedict.Add("ST", "Statistik");
+            subjnamedict.Add("EG", "Energiteknik");
+            subjnamedict.Add("MT", "Maskinteknik");
+            subjnamedict.Add("BY", "Byggteknik");
+            subjnamedict.Add("DT", "Datateknik");
+            subjnamedict.Add("ET", "Elektroteknik");
+            subjnamedict.Add("EU", "Entreprenörskap");
+            subjnamedict.Add("IE", "Industriell ekonomi");
+            subjnamedict.Add("SK", "Statsvetenskap");
+            subjnamedict.Add("AB", "Arbetsvetenskap");
+            subjnamedict.Add("SO", "Sociologi");
+            subjnamedict.Add("TR", "Turismvetenskap");
+            subjnamedict.Add("FÖ", "Företagsekonomi");
+            subjnamedict.Add("RK", "Religionsvetenskap");
+            subjnamedict.Add("HI", "Historia");
+            subjnamedict.Add("RV", "Rättsvetenskap");
+            subjnamedict.Add("NA", "Nationalekonomi");
+            subjnamedict.Add("LP", "Ljudproduktion");
+            subjnamedict.Add("FI", "Filosofi");
+            subjnamedict.Add("BP", "Bild");
+            subjnamedict.Add("PE", "Pedagogik");
+            subjnamedict.Add("PG", "Pedagogiskt arbete");
+            subjnamedict.Add("NV", "Naturvetenskap");
+            subjnamedict.Add("MD", "Matematikdidaktik");
+            subjnamedict.Add("AR", "Arabiska");
+            subjnamedict.Add("JP", "Japanska");
+            subjnamedict.Add("SS", "Svenska som andraspråk");
+            subjnamedict.Add("SP", "Spanska");
+            subjnamedict.Add("IT", "Italienska");
+            subjnamedict.Add("FR", "Franska");
+            subjnamedict.Add("LI", "Litteraturvetenskap");
+            subjnamedict.Add("SV", "Svenska");
+            subjnamedict.Add("TY", "Tyska");
+            subjnamedict.Add("EN", "Engelska");
+            subjnamedict.Add("PR", "Portugisiska");
+            subjnamedict.Add("RY", "Ryska");
+            subjnamedict.Add("KI", "Kinesiska");
+            subjnamedict.Add("FY", "Fysik");
+            subjnamedict.Add("MA", "Matematik");
+            subjnamedict.Add("KE", "Kemi");
+            subjnamedict.Add("BQ", "Bildproduktion");
+            subjnamedict.Add("PA", "Personal och arbetsliv");
+            subjnamedict.Add("PS", "Psykologi");
+            subjnamedict.Add("AS", "Afrikanska studier");
+            subjnamedict.Add("AU", "Audiovisuella studier");
+            subjnamedict.Add("BI", "Biologi");
+            subjnamedict.Add("MÖ", "Miljö");
+            subjnamedict.Add("GT", "Grafisk teknologi");
+            subjnamedict.Add("KG", "Kulturgeografi");
+            subjnamedict.Add("KT", "??");
+            subjnamedict.Add("MP", "Materialteknik");
+            subjnamedict.Add("SQ", "Samhällsbyggnad");
 
         }
 
@@ -4317,6 +4378,102 @@ namespace ProgramPrognos
             progtriangle.Add("Spec.sjuksköterska - demensvård 60 hp", "Vård");
             progtriangle.Add("Spec.sjuksköterska - distriktsköterska 75 hp", "Vård");
             progtriangle.Add("Spec.sjuksköterska - vård av äldre 60 hp", "Vård");
+            progtriangle.Add("Ämneslärare - Grundskolans årskurs 7-9", "Lärarutb");
+            progtriangle.Add("Ämneslärare Gymnasieskolan", "Lärarutb");
+            progtriangle.Add("Audiovisuell produktion", "Medier");
+            progtriangle.Add("Barnmorskeprogrammet", "Vård");
+            progtriangle.Add("Bygg- och samhällsplanerarprogrammet", "Energi och bygg");
+            progtriangle.Add("Byggingenjör", "Energi och bygg");
+            progtriangle.Add("Byggteknik - Produktion och förvaltning", "Energi och bygg");
+            progtriangle.Add("Digitala tjänster 120 hp", "Data och IT");
+            progtriangle.Add("Ekonomprogrammet", "Ekonomi och arbetsliv");
+            progtriangle.Add("Ekonomprogrammet - Business Management", "Ekonomi och arbetsliv");
+            progtriangle.Add("Entreprenöriellt företagande", "Ekonomi och arbetsliv");
+            progtriangle.Add("Film- och TV produktion", "Medier");
+            progtriangle.Add("Global sexuell och reproduktiv hälsa", "Vård");
+            progtriangle.Add("Grafisk design", "Data och IT");
+            progtriangle.Add("Grundlärare årskurs 4-6 arbetsintegrerad", "Lärarutb");
+            progtriangle.Add("Grundlärare Förskoleklass - årskurs 1-3", "Lärarutb");
+            progtriangle.Add("Grundlärare Grundskolans årskurs 4-6", "Lärarutb");
+            progtriangle.Add("Högskoleingenjör hållbara energisystem", "Energi och bygg");
+            progtriangle.Add("Industriell ekonomi - Högskoleexamen", "Industri");
+            progtriangle.Add("International Tourism Management", "Ekonomi och arbetsliv");
+            progtriangle.Add("IT säkerhet och mjukvarutestning", "Data och IT");
+            progtriangle.Add("Kompl lärarutb år 7-9", "Lärarutb");
+            progtriangle.Add("Kompl lärarutb gymnasiet", "Lärarutb");
+            progtriangle.Add("Ljud- och musikproduktionsprogrammet", "Medier");
+            progtriangle.Add("Magisterpgm Business Intelligence", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterpgm Demokrati, medborgarskap och förändring", "Samhälle");
+            progtriangle.Add("Magisterpgm i Audiovisuella Studier", "Medier");
+            progtriangle.Add("Magisterpgm i destinationsutveckling", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterpgm i Energieffektivt byggande", "Energi och bygg");
+            progtriangle.Add("Magisterpgm i engelska - eng litteratur", "Språk");
+            progtriangle.Add("Magisterpgm i engelska - lingvistik", "Språk");
+            progtriangle.Add("Magisterpgm i Företagsekonomi", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterpgm i fysioterapi", "Vård");
+            progtriangle.Add("Magisterpgm i Nationalekonomi", "Ekonomi och arbetsliv");
+            progtriangle.Add("Magisterpgm i Pedagogiskt arbete", "Lärarutb");
+            progtriangle.Add("Magisterpgm i solenergiteknik", "Energi och bygg");
+            progtriangle.Add("Magisterpgm Svenska som andraspråk", "Språk");
+            progtriangle.Add("Manus för film och TV", "Medier");
+            progtriangle.Add("Masterprogram i Data Science", "Data och IT");
+            progtriangle.Add("Masterprogram i interkulturella litteraturstudier", "Språk");
+            progtriangle.Add("Masterprogram i solenergiteknik", "Energi och bygg");
+            progtriangle.Add("Musik- och ljuddesign", "Medier");
+            progtriangle.Add("Personal- och arbetslivsprogram", "Ekonomi och arbetsliv");
+            progtriangle.Add("Produktionstekniker 120 hp", "Industri");
+            progtriangle.Add("Samhällsvetarprogrammet", "Samhälle");
+            progtriangle.Add("Sjuksköterskeprogrammet", "Vård");
+            progtriangle.Add("Socionomprogrammet", "Socionom");
+            progtriangle.Add("Spec.sjuksköterska - demensvård", "Vård");
+            progtriangle.Add("Spec.sjuksköterska - distriktsköterska", "Vård");
+            progtriangle.Add("Spec.sjuksköterska - vård av äldre", "Vård");
+            progtriangle.Add("Sport Management", "Ekonomi och arbetsliv");
+            progtriangle.Add("Systemvetenskapliga programmet", "Data och IT");
+            progtriangle.Add("Tekniskt basår", "IIT resurs");
+            progtriangle.Add("Tränarprogrammet för hälsa och idrott", "Lärarutb");
+            progtriangle.Add("Vidareutbildning av lärare", "Lärarutb");
+            progtriangle.Add("Yrkeslärare", "Lärarutb");
+            progtriangle.Add("Byggarbetsledarprogrammet", "Energi och bygg");
+            progtriangle.Add("Detaljhandelprogrammet 120hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Detaljhandelsprogrammet 180hp", "Ekonomi och arbetsliv");
+            progtriangle.Add("Digitalbrott och eSäkerhet", "Data och IT");
+            progtriangle.Add("Energiteknikerprogrammet", "Energi och bygg");
+            progtriangle.Add("Filmdesign för reklam och information", "Medier");
+            progtriangle.Add("Filmproduktion 180 hp", "Medier");
+            progtriangle.Add("Förskollärarprogrammet", "Lärarutb");
+            progtriangle.Add("Grundlärare årskurs F-3 arbetsintegrerad", "Lärarutb");
+            progtriangle.Add("Högskoleingenjör - Maskinteknik", "Industri");
+            progtriangle.Add("Idrottstränarpgm m. hälsoinriktning", "Idrott och hälsa");
+            progtriangle.Add("Idrottstränarpgm. m. inr mot prestation", "Idrott och hälsa");
+            progtriangle.Add("Idrottstränarprogrammet - prestation och hälsa", "Idrott och hälsa");
+            progtriangle.Add("Industriell ekonomi", "Industri");
+            progtriangle.Add("Informationsdesign - kandidatprogram", "Data och IT");
+            progtriangle.Add("Kompl lärarutb yrkes år 7-9", "Lärarutb");
+            progtriangle.Add("Lärarprogrammet", "Lärarutb");
+            progtriangle.Add("Magisterpgm  i religionsvetenskap", "IKS resurs");
+            progtriangle.Add("Magisterpgm Maskin/Materialteknik", "Industri");
+            progtriangle.Add("Manus och producentskap 180 hp", "Medier");
+            progtriangle.Add("Master Business Intelligence", "Ekonomi och arbetsliv");
+            progtriangle.Add("Masterprogram i Materialteknik och Produktutveckling", "Industri");
+            progtriangle.Add("Medieproduktion för TV och sociala medier 180 hp", "Medier");
+            progtriangle.Add("Musik- och ljudproduktion 180 hp", "Medier");
+            progtriangle.Add("Teknisk/Naturvetenskaplig bastermin", "IIT resurs");
+            progtriangle.Add("Upplevelseproduktion - friluftsliv, idrott och hälsa", "Idrott och hälsa");
+
+            //foreach (string name in progtriangle.Keys.ToList())
+            //{
+            //    programclass pc = findprogrambyname(name);
+            //    if (pc == null)
+            //    {
+            //        memo(name + " not found in progtriangle");
+            //    }
+            //    else if (!progtriangle.ContainsKey(pc.name))
+            //    {
+            //        progtriangle.Add(pc.name, progtriangle[name]);
+            //    }
+
+            //}
 
             subjcodetriangle.Add("VÅ", "Vård");
             subjcodetriangle.Add("VV", "Vård");
@@ -4378,6 +4535,8 @@ namespace ProgramPrognos
             subjcodetriangle.Add("KT", "IIT resurs");
             subjcodetriangle.Add("MP", "Industri");
             subjcodetriangle.Add("SQ", "Energi och bygg");
+
+
 
         }
         private void resapplbutton_Click(object sender, EventArgs e)
